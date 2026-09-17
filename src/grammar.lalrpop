@@ -1,0 +1,402 @@
+use crate::ast::*;
+use crate::lexer::Token;
+
+grammar;
+
+extern {
+    type Location = usize;
+    type Error = String;
+
+    enum Token {
+        "Graph" => Token::Graph,
+        "Node" => Token::Node,
+        "Edge" => Token::Edge,
+
+        "for" => Token::For,
+        "in" => Token::In,
+        "and" => Token::And,
+        "or" => Token::Or,
+        "not" => Token::Not,
+
+        "short_dist" => Token::ShortDist,
+        "filter" => Token::Filter,
+        "merge" => Token::Merge,
+
+        "ident" => Token::Ident(<String>),
+        "number" => Token::Number(<f64>),
+        "string" => Token::Str(<String>),
+
+        "->" => Token::ArrowDir,
+        "--" => Token::ArrowUndir,
+
+        "{" => Token::LBrace,
+        "}" => Token::RBrace,
+        "(" => Token::LParen,
+        ")" => Token::RParen,
+        "," => Token::Comma,
+        ":" => Token::Colon,
+        "." => Token::Dot,
+        ";" => Token::Semicolon,
+        "|" => Token::Pipe,
+        "=" => Token::Equals,
+
+        "==" => Token::EqEq,
+        "!=" => Token::NotEq,
+        ">=" => Token::Gte,
+        "<=" => Token::Lte,
+        ">" => Token::Gt,
+        "<" => Token::Lt,
+
+        "+" => Token::Plus,
+        "-" => Token::Minus,
+        "*" => Token::Star,
+        "/" => Token::Slash,
+        "%" => Token::Percent,
+    }
+}
+
+
+// ========== PROGRAMA
+
+
+pub Programa: Vec<Item> = {
+    <items:Item*> => items,
+};
+
+Item: Item = {
+    <g:DeclaracaoGrafo> => Item::Grafo(g),
+    <c:ComandoConsulta> => Item::Consulta(c),
+};
+
+
+// ========== GRAFO
+
+DeclaracaoGrafo: Grafo = {
+    "Graph" <nome:"ident"> "{" <itens:ItemGrafo*> "}" => {
+        let mut nodes = Vec::new();
+        let mut edges = Vec::new();
+
+        for item in itens {
+            match item {
+                ItemGrafoParcial::Node(ns) => {
+                    nodes.extend(ns);
+                }
+
+                ItemGrafoParcial::Edge(es) => {
+                    edges.extend(es);
+                }
+            }
+        }
+
+        Grafo {
+            nome,
+            nodes,
+            edges,
+        }
+    },
+};
+
+ItemGrafo: ItemGrafoParcial = {
+    // Node = {a, b, c}
+    "Node" "=" "{" <ids:ListaIds> "}"
+        => ItemGrafoParcial::Node(ids),
+
+    // Node = a
+    "Node" "=" <id:"ident">
+        => ItemGrafoParcial::Node(vec![id]),
+
+    // Edge = {a -> b, b -> c}
+    "Edge" "=" "{" <es:Arestas> "}"
+        => ItemGrafoParcial::Edge(es),
+
+    // Edge = a -> b
+    "Edge" "=" <e:Aresta>
+        => ItemGrafoParcial::Edge(vec![e]),
+};
+
+
+// ========== NODES
+
+
+ListaIds: Vec<String> = {
+    <first:"ident"> <rest:("," <id:"ident">)*> => {
+        let mut v = vec![first];
+        v.extend(rest);
+        v
+    },
+};
+
+// ========== EDGES
+
+
+Arestas: Vec<Aresta> = {
+    <first:Aresta>
+    <rest:("," <e:Aresta>) *>
+    => {
+        let mut v = vec![first];
+        v.extend(rest);
+        v
+    },
+};
+
+Aresta: Aresta = {
+    <origem:"ident">
+    <tipo:TipoAresta>
+    <destino:"ident">
+    <peso:(":" <n:"number">)? >
+    => {
+        Aresta {
+            origem,
+            destino,
+            tipo,
+            peso: peso.map(|n| n),
+        }
+    },
+};
+
+TipoAresta: TipoAresta = {
+    "->" => TipoAresta::Direcionada,
+    "--" => TipoAresta::NaoDirecionada,
+};
+
+
+// ========== CONSULTAS
+
+
+ComandoConsulta: ExpressaoConsulta = {
+    <e:ExpressaoConsulta> ";"? => e,
+};
+
+ExpressaoConsulta: ExpressaoConsulta = {
+    <grafo:"ident">
+    <chamadas:ChamadaConsulta+>
+    => {
+        ExpressaoConsulta {
+            grafo,
+            chamadas,
+        }
+    },
+};
+
+ChamadaConsulta: Chamada = {
+    "."
+    <c:Chamada>
+    => c,
+};
+
+Chamada: Chamada = {
+    "short_dist"
+    "(" <o:"ident"> "," <d:"ident"> ")"
+    => {
+        Chamada::ShortDist {
+            origem: o,
+            destino: d,
+        }
+    },
+
+    "filter"
+    "(" <f:Filtro> ")"
+    => {
+        Chamada::Filter {
+            filtro: f,
+        }
+    },
+
+    "merge"
+    "(" <m:MergeArgs> ")"
+    => {
+        Chamada::Merge {
+            args: m,
+        }
+    },
+};
+
+
+// ========== FILTER
+
+
+Filtro: Filtro = {
+    "for"
+    <v:"ident">
+    "in"
+    <fonte:"ident">
+    "|"
+    <cond:Expr>
+    => {
+        Filtro {
+            variavel: v,
+            fonte,
+            condicao: cond,
+        }
+    },
+};
+
+
+// ========== MERGE
+
+
+MergeArgs: MergeArgs = {
+    <og:"ident">
+    "."
+    <on:"ident">
+    <tipo:TipoAresta>
+    <dg:"ident">
+    "."
+    <dn:"ident">
+    <peso:(":" <n:"number">)? >
+    => {
+        MergeArgs {
+            origem: (og, on),
+            destino: (dg, dn),
+            tipo,
+            peso: peso.map(|n| n),
+        }
+    },
+};
+
+
+// ========== EXPRESSÕES
+
+
+Expr: Expr = {
+    ExprOr,
+};
+
+ExprOr: Expr = {
+    <l:ExprOr>
+    "or"
+    <r:ExprAnd>
+    => Expr::Binario(
+        Box::new(l),
+        "or".into(),
+        Box::new(r)
+    ),
+
+    ExprAnd,
+};
+
+ExprAnd: Expr = {
+    <l:ExprAnd>
+    "and"
+    <r:ExprNot>
+    => Expr::Binario(
+        Box::new(l),
+        "and".into(),
+        Box::new(r)
+    ),
+
+    ExprNot,
+};
+
+ExprNot: Expr = {
+    "not"
+    <e:ExprRel>
+    => Expr::Unario(
+        "not".into(),
+        Box::new(e)
+    ),
+
+    ExprRel,
+};
+
+ExprRel: Expr = {
+    <l:ExprAdd>
+    <op:OpRel>
+    <r:ExprAdd>
+    => Expr::Binario(
+        Box::new(l),
+        op,
+        Box::new(r)
+    ),
+
+    ExprAdd,
+};
+
+ExprAdd: Expr = {
+    <l:ExprAdd>
+    <op:OpAdd>
+    <r:ExprMul>
+    => Expr::Binario(
+        Box::new(l),
+        op,
+        Box::new(r)
+    ),
+
+    ExprMul,
+};
+
+ExprMul: Expr = {
+    <l:ExprMul>
+    <op:OpMul>
+    <r:ExprUnario>
+    => Expr::Binario(
+        Box::new(l),
+        op,
+        Box::new(r)
+    ),
+
+    ExprUnario,
+};
+
+ExprUnario: Expr = {
+    "-"
+    <e:ExprPos>
+    => Expr::Unario(
+        "-".into(),
+        Box::new(e)
+    ),
+
+    ExprPos,
+};
+
+ExprPos: Expr = {
+    <base:ExprPos>
+    "."
+    <campo:"ident">
+    => Expr::Acesso(
+        Box::new(base),
+        campo
+    ),
+
+    ExprPrimaria,
+};
+
+ExprPrimaria: Expr = {
+    <n:"number">
+        => Expr::Numero(n),
+
+    <s:"string">
+        => Expr::Texto(s),
+
+    <id:"ident">
+        => Expr::Identificador(id),
+
+    "("
+    <e:Expr>
+    ")"
+        => e,
+};
+
+
+// ========== OPERADORES
+
+
+OpRel: String = {
+    "==" => "==".into(),
+    "!=" => "!=".into(),
+    ">=" => ">=".into(),
+    "<=" => "<=".into(),
+    ">"  => ">".into(),
+    "<"  => "<".into(),
+};
+
+OpAdd: String = {
+    "+" => "+".into(),
+    "-" => "-".into(),
+};
+
+OpMul: String = {
+    "*" => "*".into(),
+    "/" => "/".into(),
+    "%" => "%".into(),
+};
