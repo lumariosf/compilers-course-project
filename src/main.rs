@@ -1,20 +1,34 @@
 mod ast;
 mod lexer;
+use lalrpop_util::lalrpop_mod;
+lalrpop_mod!(pub grammar);
+use std::env;
+use std::fs;
 
-use lexer::LexerAdapter;
-
-lalrpop_util::lalrpop_mod!(pub grammar); // gera o módulo a partir do grammar.lalrpop
 
 fn main() {
-    let input = std::fs::read_to_string("examples/grafo1.graph")
-        .expect("não foi possível ler o arquivo");
+    let args: Vec<String> = env::args().collect();
 
-    let lexer = LexerAdapter::new(&input);
+    if args.len() < 2 {
+        eprintln!("Uso: cargo run -- <arquivo>");
+        return;
+    }
+
+    let caminho = &args[1];
+
+    let entrada = match fs::read_to_string(caminho) {
+        Ok(conteudo) => conteudo,
+        Err(e) => {
+            eprintln!("Erro ao ler arquivo: {}", e);
+            return;
+        }
+    };
+
     let parser = grammar::ProgramaParser::new();
 
-    match parser.parse(lexer) {
-        Ok(ast) => {
-            println!("Parse bem-sucedido!\n{:#?}", ast);
+    match parser.parse(lexer::Lexer::new(&entrada)) {
+        Ok(programa) => {
+            println!("{:#?}", programa);
         }
         Err(e) => {
             eprintln!("Erro de parsing: {:?}", e);

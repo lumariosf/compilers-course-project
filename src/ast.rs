@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, PartialEq)]
-pub enum Programa {
+pub enum Item {
     Grafo(Grafo),
     Consulta(ExpressaoConsulta),
 }

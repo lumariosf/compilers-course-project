@@ -58,7 +58,6 @@ extern {
 
 // ========== PROGRAMA
 
-
 pub Programa: Vec<Item> = {
     <items:Item*> => items,
 };
@@ -117,41 +116,53 @@ ItemGrafo: ItemGrafoParcial = {
 
 // ========== NODES
 
-
 ListaIds: Vec<String> = {
-    <first:"ident"> <rest:("," <id:"ident">)*> => {
-        let mut v = vec![first];
-        v.extend(rest);
-        v
-    },
+    <first:"ident"> <rest:ListaIdsResto*>
+        => {
+            let mut v = vec![first];
+            v.extend(rest);
+            v
+        },
 };
+
+ListaIdsResto: String = {
+    "," <id:"ident"> => id,
+};
+
 
 // ========== EDGES
 
-
 Arestas: Vec<Aresta> = {
-    <first:Aresta>
-    <rest:("," <e:Aresta>) *>
-    => {
-        let mut v = vec![first];
-        v.extend(rest);
-        v
-    },
+    <first:Aresta> <rest:ArestaResto*>
+        => {
+            let mut v = vec![first];
+            v.extend(rest);
+            v
+        },
+};
+
+ArestaResto: Aresta = {
+    "," <e:Aresta> => e,
 };
 
 Aresta: Aresta = {
     <origem:"ident">
     <tipo:TipoAresta>
     <destino:"ident">
-    <peso:(":" <n:"number">)? >
+    <peso:Peso>
     => {
         Aresta {
             origem,
             destino,
             tipo,
-            peso: peso.map(|n| n),
+            peso,
         }
     },
+};
+
+Peso: Option<f64> = {
+    ":" <n:"number"> => Some(n),
+    => None,
 };
 
 TipoAresta: TipoAresta = {
@@ -161,7 +172,6 @@ TipoAresta: TipoAresta = {
 
 
 // ========== CONSULTAS
-
 
 ComandoConsulta: ExpressaoConsulta = {
     <e:ExpressaoConsulta> ";"? => e,
@@ -183,6 +193,7 @@ ChamadaConsulta: Chamada = {
     <c:Chamada>
     => c,
 };
+
 
 Chamada: Chamada = {
     "short_dist"
@@ -214,7 +225,6 @@ Chamada: Chamada = {
 
 // ========== FILTER
 
-
 Filtro: Filtro = {
     "for"
     <v:"ident">
@@ -234,7 +244,6 @@ Filtro: Filtro = {
 
 // ========== MERGE
 
-
 MergeArgs: MergeArgs = {
     <og:"ident">
     "."
@@ -243,20 +252,19 @@ MergeArgs: MergeArgs = {
     <dg:"ident">
     "."
     <dn:"ident">
-    <peso:(":" <n:"number">)? >
+    <peso:Peso>
     => {
         MergeArgs {
             origem: (og, on),
             destino: (dg, dn),
             tipo,
-            peso: peso.map(|n| n),
+            peso,
         }
     },
 };
 
 
 // ========== EXPRESSÕES
-
 
 Expr: Expr = {
     ExprOr,
@@ -380,14 +388,13 @@ ExprPrimaria: Expr = {
 
 // ========== OPERADORES
 
-
 OpRel: String = {
     "==" => "==".into(),
     "!=" => "!=".into(),
     ">=" => ">=".into(),
     "<=" => "<=".into(),
-    ">"  => ">".into(),
-    "<"  => "<".into(),
+    ">" => ">".into(),
+    "<" => "<".into(),
 };
 
 OpAdd: String = {

@@ -1,13 +1,12 @@
-Graph grafo1 {
-    Node = {a1, a2, a3, a4, a5, a6, a7, a8}
+Graph G {
+    Node = {a, b, c, d}
     Edge = {
-        a1 -> a2 : 10
-        a2 -- a3 : 20
-        a1 -> a3 : 2
-        a3 -- a4 : 30
-        a4 -> a5 : 9
-        a7 -> a8
+        a -> b,
+        b -> c,
+        c -> d
     }
-    Node a9
-    Edge a1 -> a9
+
+    Node = e
+    Edge = a -> e : 10
 }
+G.short_dist(a, d)

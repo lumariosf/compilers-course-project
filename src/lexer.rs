@@ -2,15 +2,15 @@ use logos::Logos;
 
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(skip r"[ \t\r\n]+")]    // para ignorar espaços em branco
-#[logos(skip r"//[^n]*")]       // para ignorar comentarios de linha
+#[logos(skip r"//[^\n]*")]       // para ignorar comentarios de linha
 
-pum enum Token {
+pub enum Token {
     // keywords selecionadas
     #[token("Graph")]
     Graph, 
     #[token("Node")]
     Node, 
-    #[Token("Edge")]
+    #[token("Edge")]
     Edge, 
     #[token("for")]
     For, 
@@ -20,6 +20,8 @@ pum enum Token {
     Or, 
     #[token("not")]
     Not, 
+    #[token("and")]
+    And,
 
     // consultas
     #[token("short_dist")]
@@ -92,4 +94,41 @@ pum enum Token {
     Slash,
     #[token("%")]
     Percent,
+}
+
+pub struct Lexer<'input> {
+    inner: logos::Lexer<'input, Token>,
+}
+
+impl<'input> Lexer<'input> {
+    pub fn new(input: &'input str) -> Self {
+        Self {
+            inner: Token::lexer(input),
+        }
+    }
+}
+
+impl<'input> Iterator for Lexer<'input> {
+    type Item = Result<(usize, Token, usize), String>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let start = self.inner.span().start;
+
+        match self.inner.next()? {
+            Ok(token) => {
+                let end = self.inner.span().end;
+
+                Some(Ok((start, token, end)))
+            }
+
+            Err(_) => {
+                let end = self.inner.span().end;
+
+                Some(Err(format!(
+                    "Token inválido na posição {}..{}",
+                    start, end
+                )))
+            }
+        }
+    }
 }
