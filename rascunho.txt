@@ -1,0 +1,38 @@
+programa        ::= { declaracao_grafo | comando_consulta } ;
+
+
+Grafo
+declaracao_grafo ::= "Graph" IDENT "{" 
+                        "Node" "=" "{" lista_ids "}"
+                        "Edge"  "=" "{" { aresta } "}"
+                      "}" ;
+
+lista_ids       ::= IDENT { "," IDENT } ;
+
+aresta          ::= IDENT tipo_aresta IDENT [ ":" NUMERO ] ;
+tipo_aresta     ::= "->" | "--" ;
+
+
+Cosulta
+comando_consulta ::= expressao_consulta [ ";" ] ;
+
+expressao_consulta ::= referencia_grafo "." chamada { "." chamada } ;
+
+chamada         ::= "short_dist" "(" IDENT "," IDENT ")"
+                   | "filter" "(" filtro ")"
+                   | "merge" "(" merge_args ")" ;
+
+filtro          ::= "for" IDENT "in" IDENT "|" expr_booleana ;
+
+expr_booleana   ::= expr op_rel expr ;
+op_rel          ::= ">" | "<" | ">=" | "<=" | "==" | "!=" ;
+
+merge_args      ::= no_qualificado tipo_aresta no_qualificado [ ":" NUMERO ] ;
+no_qualificado  ::= IDENT "." IDENT ;   (* grafo.no *)
+
+referencia_grafo ::= IDENT ;
+
+
+Léxico
+IDENT           ::= LETRA { LETRA | DIGITO | "_" } ;
+NUMERO          ::= DIGITO { DIGITO } [ "." DIGITO { DIGITO } ] ;
