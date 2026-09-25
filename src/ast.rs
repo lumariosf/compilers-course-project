@@ -41,7 +41,7 @@ pub struct ExpressaoConsulta {
 pub enum Chamada {
     ShortDist { origem: String, destino: String },
     Filter { filtro: Filtro },
-    Merge { args: MergeArgs },
+    Merge { grafo_alvo: String },
 }
 
 #[derive(Debug, Clone, PartialEq)]

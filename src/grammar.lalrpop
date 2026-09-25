@@ -162,7 +162,7 @@ Aresta: Aresta = {
 
 Peso: Option<f64> = {
     ":" <n:"number"> => Some(n),
-    => None,
+    => Some(1.0),
 };
 
 TipoAresta: TipoAresta = {
@@ -213,12 +213,8 @@ Chamada: Chamada = {
         }
     },
 
-    "merge"
-    "(" <m:MergeArgs> ")"
-    => {
-        Chamada::Merge {
-            args: m,
-        }
+    "merge" "(" <grafo_alvo:"ident"> ")" => {
+        Chamada::Merge { grafo_alvo }
     },
 };
 
