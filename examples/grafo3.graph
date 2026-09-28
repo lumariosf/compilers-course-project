@@ -1,4 +1,0 @@
-Graph G1 {
-Node = { a , d }
-Edge = { a->d ,d->d }
-}
