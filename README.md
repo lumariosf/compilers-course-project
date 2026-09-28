@@ -3,6 +3,8 @@
 
 GRAPH é uma linguagem específica de domínio (DSL) para definição e consulta de grafos. Este repositório contém a especificação do Parser de GRAPH como parte do trabalho feito para a matéria de Compiladores do semestre 2026.2 pelo grupo 5 (Giovanna Marques Mafra, Heitor Cordeiro Holanda, Luma Rios Ferreira e Mariana Sousa Freire).
 
+Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop](https://github.com/lalrpop/lalrpop), por ser um framework que tem usabilidade como seu principal objetivo e por gerar o Parser diretamente em Rust.
+
 ## Diretórios
 
 ```bash
