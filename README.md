@@ -99,7 +99,7 @@ Regras:
 - Nós sem tipo (`Node = a`) continuam válidos e simplesmente não têm atributos.
 Todas essas verificações acontecem **em tempo de compilação**, antes de qualquer consulta ser executada.
 
-```
+
 ### 6. Declarando arestas
 Para declarar uma aresta, utilize o operador `--` para arestas bidirecionais ou o operador `->` para arestas unidirecionais entre dois nós e inclua a aresta na lista definida pela palavra reservada `Edge`. Assim como nós, arestas também podem ser declaradas sozinhas, sem necessidade de chaves.
 
