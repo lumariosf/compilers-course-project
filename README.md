@@ -14,6 +14,7 @@ Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop]
     ├── src/
     │   ├── ast.rs
     │   ├── grammar.lalrpop
+    |   ├── grammar.rs
     │   ├── lexer.rs
     │   └── main.rs
     ├── .gitignore
@@ -74,9 +75,31 @@ Graph G2 {
          Edge = { a->d ,d->d }
 }
 
+### 5. Tipos de nó e atributos
+ 
+Nós podem carregar dados (atributos). Para isso, o grafo declara um **`NodeType`**, que descreve os campos e seus tipos, e cada nó declara qual tipo usa e os valores dos seus atributos.
+ 
+```
+Graph rede {
+    NodeType Pessoa { nome: String, idade: Number, ativo: Option<Bool> }
+ 
+    Node = ana : Pessoa { nome: "Ana", idade: 20 }
+    Node = bia : Pessoa { nome: "Bia", idade: 31, ativo: True }
+    Edge = ana -> bia
+}
+```
+ 
+Regras:
+ 
+- O `NodeType` é declarado **dentro do grafo** e deve aparecer **antes** de ser usado por um nó.
+- Os tipos dos campos são `Number`, `String`, `Bool`.
+- O valor de um atributo deve ser um literal (`20`, `-5`, `"Ana"`, `True`) do tipo declarado.
+- Cada atributo informado deve existir no `NodeType`, e não pode ser repetido.
+- Nós sem tipo (`Node = a`) continuam válidos e simplesmente não têm atributos.
+Todas essas verificações acontecem **em tempo de compilação**, antes de qualquer consulta ser executada.
 
 ```
-### 5. Declarando arestas
+### 6. Declarando arestas
 Para declarar uma aresta, utilize o operador `--` para arestas bidirecionais ou o operador `->` para arestas unidirecionais entre dois nós e inclua a aresta na lista definida pela palavra reservada `Edge`. Assim como nós, arestas também podem ser declaradas sozinhas, sem necessidade de chaves.
 
 Arestas tem 4 atributos que podem ser acessados: 
@@ -114,7 +137,7 @@ Arestas em GRAPH tem valor default de **1**. Para definir o peso de uma aresta, 
     Edge = user124 -> user123 : 2
 ```
 
-### 6. Consultas 
+### 7. Consultas 
 Atualmente, existem três tipos de consultas permitidas em GRAPH:
 
 #### short_dist
@@ -124,9 +147,11 @@ Essa consulta retorna a menor distância entre dois nós de um grafo. Para fazer
  myGraph.short_dist( A, B ) 
 ```
 
-**A consulta retornará um erro se os nós não existirem no grafo especificado.**
-
-Para grafos que só possuem arestas sem peso, a consulta retornará **0**. Se os nós não forem conectados, a consulta retornará **-1**.
+**A consulta é rejeitada em tempo de compilação se os nós não existirem no grafo especificado.**
+ 
+A consulta retorna a soma dos pesos do caminho mais curto entre os dois nós.
+ 
+**Se os nós não forem conectados, a consulta gera um erro de execução**,
 
 ---
 #### filter
@@ -145,12 +170,21 @@ filter(for e in myGraph | e.weight >= 5 and not e.destination == "X")
 Genericamente, siga o modelo `for {variable} in {source} | {condition}` para definir o filtro dentro do filter.
 
 ---
-
 #### merge
-Essa consulta permite a junção do grafo atual com outro grafo. Deve ser passado em seu argumento qual o grafo que você deseja mergir.
-
-``` bash 
-graphA.merge(graphB) 
+ 
+O `merge` **cria um novo grafo** a partir de dois grafos existentes, que permanecem intactos. O resultado deve ser ligado a um nome com a declaração `Graph`. Para conectar os dois grafos, informe uma ou mais **pontes** depois do segundo grafo. Cada ponte é uma aresta cujas extremidades são **qualificadas** com o nome do grafo (`Grafo.nó`):
+ 
 ```
-
-A consulta retorna um **bool**, True se a junção foi bem sucedida ou False se a junção não foi possível.
+Graph G3 = G1.merge(G2, G1.a -> G2.b : 10, G2.c -> G1.k)
+```
+ 
+Regras:
+ 
+- Cada ponte liga um nó de `G1` a um nó de `G2` (ou vice-versa). Uma ponte entre dois nós do mesmo grafo é inválida.
+- Os nós de cada ponte devem existir nos respectivos grafos.
+- As pontes aceitam `->` e `--` e um peso opcional (default 1), assim como as arestas comuns.
+- **Se `G1` e `G2` tiverem um nó com o mesmo nome, o `merge` é rejeitado.**
+- Se `G1` e `G2` declararem um `NodeType` com o mesmo nome, as duas definições devem ser **idênticas**; caso contrário, o `merge` é rejeitado.
+- O grafo resultante contém os nós, as arestas e os `NodeType` dos dois grafos, mais as pontes.
+- O grafo derivado só pode ser usado depois da linha em que foi declarado.
+Qualquer violação dessas regras é um erro de compilação.

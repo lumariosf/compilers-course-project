@@ -22,6 +22,12 @@ pub enum Token {
     Not, 
     #[token("and")]
     And,
+    #[token("True")]
+    True,
+    #[token("False")]
+    False,
+    #[token("NodeType")]
+    NodeType,
 
     // consultas
     #[token("short_dist")]
@@ -32,7 +38,7 @@ pub enum Token {
     Merge, 
 
     // literais e identificadores
-    #[regex(r"[A-Za-z_][A-Za-z0-9_]*", |lex| lex.slice().to_string())]
+    #[regex(r"[A-Za-z][A-Za-z0-9_]*", |lex| lex.slice().to_string())]
     Ident(String),
 
     #[regex(r"[0-9]+(\.[0-9]+)?", |lex| lex.slice().parse::<f64>().unwrap())]
@@ -111,24 +117,16 @@ impl<'input> Lexer<'input> {
 impl<'input> Iterator for Lexer<'input> {
     type Item = Result<(usize, Token, usize), String>;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        let start = self.inner.span().start;
+   fn next(&mut self) -> Option<Self::Item> {
+        let resultado = self.inner.next()?;   // primeiro avança...
+        let span = self.inner.span();         // ...depois lê a posição do token que acabou de sair
 
-        match self.inner.next()? {
-            Ok(token) => {
-                let end = self.inner.span().end;
-
-                Some(Ok((start, token, end)))
-            }
-
-            Err(_) => {
-                let end = self.inner.span().end;
-
-                Some(Err(format!(
-                    "Token inválido na posição {}..{}",
-                    start, end
-                )))
-            }
-        }
+        Some(match resultado {
+            Ok(token) => Ok((span.start, token, span.end)),
+            Err(_) => Err(format!(
+                "Token inválido na posição {}..{}",
+                span.start, span.end
+            )),
+        })
     }
 }

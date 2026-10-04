@@ -1,0 +1,7 @@
+Graph G {
+    NodeType Pessoa { nome: String, idade: Number, ativo: Option<Bool> }
+
+    Node = ana : Pessoa { nome: "Ana", idade: 20 }
+    Node = {a, b}
+    Edge = a -> b : 10
+}

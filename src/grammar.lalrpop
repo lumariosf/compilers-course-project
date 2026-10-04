@@ -11,6 +11,7 @@ extern {
         "Graph" => Token::Graph,
         "Node" => Token::Node,
         "Edge" => Token::Edge,
+        "NodeType" => Token::NodeType,
 
         "for" => Token::For,
         "in" => Token::In,
@@ -25,6 +26,9 @@ extern {
         "ident" => Token::Ident(<String>),
         "number" => Token::Number(<f64>),
         "string" => Token::Str(<String>),
+        
+        "True" => Token::True,
+        "False" => Token::False,
 
         "->" => Token::ArrowDir,
         "--" => Token::ArrowUndir,
@@ -55,6 +59,8 @@ extern {
     }
 }
 
+// adiconado span que diz em que parte do texto o programa estava (usado pelo checker)
+
 
 // ========== PROGRAMA
 
@@ -68,101 +74,79 @@ Item: Item = {
 };
 
 
+Ident: Ident = {
+    <l:@L> <name:"ident"> <r:@R> => Ident { name, span: Span { start: l, end: r } },
+};
+
+Comma<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => { v.push(e); v }
+    }
+};
+
 // ========== GRAFO
 
 DeclaracaoGrafo: Grafo = {
-    "Graph" <nome:"ident"> "{" <itens:ItemGrafo*> "}" => {
-        let mut nodes = Vec::new();
-        let mut edges = Vec::new();
-
-        for item in itens {
-            match item {
-                ItemGrafoParcial::Node(ns) => {
-                    nodes.extend(ns);
-                }
-
-                ItemGrafoParcial::Edge(es) => {
-                    edges.extend(es);
-                }
-            }
-        }
-
-        Grafo {
-            nome,
-            nodes,
-            edges,
-        }
+    <l:@L> "Graph" <nome:Ident> "{" <itens:ItemGrafo*> "}" <r:@R> => Grafo {
+        nome,
+        membros: itens.into_iter().flatten().collect(),
+        span: Span { start: l, end: r },
     },
 };
 
-ItemGrafo: ItemGrafoParcial = {
-    // Node = {a, b, c}
+ItemGrafo: Vec<Membro> = {
     "Node" "=" "{" <ids:ListaIds> "}"
-        => ItemGrafoParcial::Node(ids),
-
-    // Node = a
-    "Node" "=" <id:"ident">
-        => ItemGrafoParcial::Node(vec![id]),
-
-    // Edge = {a -> b, b -> c}
+        => ids.into_iter().map(Membro::Node).collect(),
+    "Node" "=" <id:Ident>
+        => vec![Membro::Node(id)],
     "Edge" "=" "{" <es:Arestas> "}"
-        => ItemGrafoParcial::Edge(es),
-
-    // Edge = a -> b
+        => es.into_iter().map(Membro::Edge).collect(),
     "Edge" "=" <e:Aresta>
-        => ItemGrafoParcial::Edge(vec![e]),
+        => vec![Membro::Edge(e)],
+
+        "Node" "=" <n:NoTipado>
+        => vec![Membro::NodeTipado(n)],
+    <t:TipoDecl>
+        => vec![Membro::Tipo(t)],
 };
 
 
 // ========== NODES
 
-ListaIds: Vec<String> = {
-    <first:"ident"> <rest:ListaIdsResto*>
-        => {
-            let mut v = vec![first];
-            v.extend(rest);
-            v
-        },
+ListaIds: Vec<Ident> = {
+    <first:Ident> <rest:ListaIdsResto*>
+        => { let mut v = vec![first]; v.extend(rest); v },
 };
 
-ListaIdsResto: String = {
-    "," <id:"ident"> => id,
+ListaIdsResto: Ident = {
+    "," <id:Ident> => id,
 };
 
 
 // ========== EDGES
 
-Arestas: Vec<Aresta> = {
-    <first:Aresta> <rest:ArestaResto*>
-        => {
-            let mut v = vec![first];
-            v.extend(rest);
-            v
-        },
+Aresta: Aresta = {
+    <l:@L> <origem:Ident> <tipo:TipoAresta> <destino:Ident> <r:@R>
+        => Aresta { origem, destino, tipo, peso: None, span: Span { start: l, end: r } },
+
+    <l:@L> <origem:Ident> <tipo:TipoAresta> <destino:Ident> ":" <n:"number"> <r:@R>
+        => Aresta { origem, destino, tipo, peso: Some(n), span: Span { start: l, end: r } },
 };
 
 ArestaResto: Aresta = {
     "," <e:Aresta> => e,
 };
 
-Aresta: Aresta = {
-    <origem:"ident">
-    <tipo:TipoAresta>
-    <destino:"ident">
-    <peso:Peso>
-    => {
-        Aresta {
-            origem,
-            destino,
-            tipo,
-            peso,
-        }
-    },
+
+Arestas: Vec<Aresta> = {
+    <first:Aresta> <rest:ArestaResto*>
+        => { let mut v = vec![first]; v.extend(rest); v },
 };
 
 Peso: Option<f64> = {
     ":" <n:"number"> => Some(n),
-    => Some(1.0),
+    => None,
 };
 
 TipoAresta: TipoAresta = {
@@ -170,6 +154,39 @@ TipoAresta: TipoAresta = {
     "--" => TipoAresta::NaoDirecionada,
 };
 
+// ========== TIPOS E ATRIBUTOS
+
+TipoDecl: TipoDecl = {
+    <l:@L> "NodeType" <nome:Ident> "{" <campos:Comma<Campo>> "}" <r:@R>
+        => TipoDecl { nome, campos, span: Span { start: l, end: r } },
+};
+
+Campo: CampoDecl = {
+    <nome:Ident> ":" <tipo:TipoAnotado> <r:@R> => {
+        let span = Span { start: nome.span.start, end: r };
+        CampoDecl { nome, tipo, span }
+    },
+};
+
+TipoAnotado: TipoAnotado = {
+    <n:Ident> => TipoAnotado::Nome(n),
+    <n:Ident> "<" <a:TipoAnotado> ">"
+        => TipoAnotado::Generico { nome: n, arg: Box::new(a) },
+};
+
+NoTipado: NoTipado = {
+    <nome:Ident> ":" <tipo:Ident> "{" <atributos:Comma<Atributo>> "}" <r:@R> => {
+        let span = Span { start: nome.span.start, end: r };
+        NoTipado { nome, tipo, atributos, span }
+    },
+};
+
+Atributo: Atributo = {
+    <nome:Ident> ":" <valor:Expr> <r:@R> => {
+        let span = Span { start: nome.span.start, end: r };
+        Atributo { nome, valor, span }
+    },
+};
 
 // ========== CONSULTAS
 
@@ -178,7 +195,7 @@ ComandoConsulta: ExpressaoConsulta = {
 };
 
 ExpressaoConsulta: ExpressaoConsulta = {
-    <grafo:"ident">
+    <grafo:Ident>
     <chamadas:ChamadaConsulta+>
     => {
         ExpressaoConsulta {
@@ -197,7 +214,7 @@ ChamadaConsulta: Chamada = {
 
 Chamada: Chamada = {
     "short_dist"
-    "(" <o:"ident"> "," <d:"ident"> ")"
+    "(" <o:Ident> "," <d:Ident> ")"
     => {
         Chamada::ShortDist {
             origem: o,
@@ -213,7 +230,7 @@ Chamada: Chamada = {
         }
     },
 
-    "merge" "(" <grafo_alvo:"ident"> ")" => {
+    "merge" "(" <grafo_alvo:Ident> ")" => {
         Chamada::Merge { grafo_alvo }
     },
 };
@@ -223,9 +240,9 @@ Chamada: Chamada = {
 
 Filtro: Filtro = {
     "for"
-    <v:"ident">
+    <v:Ident>
     "in"
-    <fonte:"ident">
+    <fonte:Ident>
     "|"
     <cond:Expr>
     => {
@@ -259,7 +276,6 @@ MergeArgs: MergeArgs = {
     },
 };
 
-
 // ========== EXPRESSÕES
 
 Expr: Expr = {
@@ -267,139 +283,82 @@ Expr: Expr = {
 };
 
 ExprOr: Expr = {
-    <l:ExprOr>
-    "or"
-    <r:ExprAnd>
-    => Expr::Binario(
-        Box::new(l),
-        "or".into(),
-        Box::new(r)
-    ),
-
+    <l:ExprOr> "or" <r:ExprAnd> => Expr::binario(l, BinOp::Or, r),
     ExprAnd,
 };
 
 ExprAnd: Expr = {
-    <l:ExprAnd>
-    "and"
-    <r:ExprNot>
-    => Expr::Binario(
-        Box::new(l),
-        "and".into(),
-        Box::new(r)
-    ),
-
+    <l:ExprAnd> "and" <r:ExprNot> => Expr::binario(l, BinOp::And, r),
     ExprNot,
 };
 
 ExprNot: Expr = {
-    "not"
-    <e:ExprRel>
-    => Expr::Unario(
-        "not".into(),
-        Box::new(e)
-    ),
-
+    <l:@L> "not" <e:ExprNot> <r:@R> => Expr {
+        kind: ExprKind::Unario(UnOp::Not, Box::new(e)),
+        span: Span { start: l, end: r },
+    },
     ExprRel,
 };
 
 ExprRel: Expr = {
-    <l:ExprAdd>
-    <op:OpRel>
-    <r:ExprAdd>
-    => Expr::Binario(
-        Box::new(l),
-        op,
-        Box::new(r)
-    ),
-
+    <l:ExprAdd> <op:OpRel> <r:ExprAdd> => Expr::binario(l, op, r),
     ExprAdd,
 };
 
 ExprAdd: Expr = {
-    <l:ExprAdd>
-    <op:OpAdd>
-    <r:ExprMul>
-    => Expr::Binario(
-        Box::new(l),
-        op,
-        Box::new(r)
-    ),
-
+    <l:ExprAdd> <op:OpAdd> <r:ExprMul> => Expr::binario(l, op, r),
     ExprMul,
 };
 
 ExprMul: Expr = {
-    <l:ExprMul>
-    <op:OpMul>
-    <r:ExprUnario>
-    => Expr::Binario(
-        Box::new(l),
-        op,
-        Box::new(r)
-    ),
-
+    <l:ExprMul> <op:OpMul> <r:ExprUnario> => Expr::binario(l, op, r),
     ExprUnario,
 };
 
 ExprUnario: Expr = {
-    "-"
-    <e:ExprPos>
-    => Expr::Unario(
-        "-".into(),
-        Box::new(e)
-    ),
-
+    <l:@L> "-" <e:ExprPos> <r:@R> => Expr {
+        kind: ExprKind::Unario(UnOp::Neg, Box::new(e)),
+        span: Span { start: l, end: r },
+    },
     ExprPos,
 };
 
 ExprPos: Expr = {
-    <base:ExprPos>
-    "."
-    <campo:"ident">
-    => Expr::Acesso(
-        Box::new(base),
-        campo
-    ),
-
+    <l:@L> <base:ExprPos> "." <campo:Ident> <r:@R> => Expr {
+        kind: ExprKind::Acesso(Box::new(base), campo),
+        span: Span { start: l, end: r },
+    },
     ExprPrimaria,
 };
 
 ExprPrimaria: Expr = {
-    <n:"number">
-        => Expr::Numero(n),
-
-    <s:"string">
-        => Expr::Texto(s),
-
-    <id:"ident">
-        => Expr::Identificador(id),
-
-    "("
-    <e:Expr>
-    ")"
-        => e,
+    <l:@L> <n:"number"> <r:@R> => Expr { kind: ExprKind::Numero(n), span: Span { start: l, end: r } },
+    <l:@L> <s:"string"> <r:@R> => Expr { kind: ExprKind::Texto(s), span: Span { start: l, end: r } },
+    <l:@L> "True" <r:@R> => Expr { kind: ExprKind::Bool(true), span: Span { start: l, end: r } },
+    <l:@L> "False" <r:@R> => Expr { kind: ExprKind::Bool(false), span: Span { start: l, end: r } },
+    <l:@L> <id:"ident"> <r:@R> => Expr { kind: ExprKind::Identificador(id), span: Span { start: l, end: r } },
+    "(" <e:Expr> ")" => e,
 };
 
 
 // ========== OPERADORES
 
-OpRel: String = {
-    "==" => "==".into(),
-    "!=" => "!=".into(),
-    ">=" => ">=".into(),
-    "<=" => "<=".into(),
-    ">" => ">".into(),
-    "<" => "<".into(),
+OpRel: BinOp = {
+    "==" => BinOp::Eq,
+    "!=" => BinOp::Neq,
+    ">=" => BinOp::Gte,
+    "<=" => BinOp::Lte,
+    ">"  => BinOp::Gt,
+    "<"  => BinOp::Lt,
 };
 
-OpAdd: String = {
-    "+" => "+".into(),
-    "-" => "-".into(),
+OpAdd: BinOp = {
+    "+" => BinOp::Add,
+    "-" => BinOp::Sub,
 };
 
-OpMul: String = {
-    "*" => "*".into(),
-    "/" => "/".into(),
-    "%" => "%".into(),
+OpMul: BinOp = {
+    "*" => BinOp::Mul,
+    "/" => BinOp::Div,
+    "%" => BinOp::Mod,
 };
