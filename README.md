@@ -74,6 +74,7 @@ Graph G2 {
          Node = { a , d }
          Edge = { a->d ,d->d }
 }
+```
 
 ### 5. Tipos de nó e atributos
  
