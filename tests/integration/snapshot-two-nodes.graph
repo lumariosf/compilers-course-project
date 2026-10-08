@@ -1,0 +1,4 @@
+Graph Tiny {
+    Node = {a, b}
+    Edge = a -> b
+}

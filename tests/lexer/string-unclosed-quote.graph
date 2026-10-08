@@ -1,0 +1,4 @@
+Graph StringQuote {
+    NodeType Person { name: String }
+    Node = ana : Person { name: "Ana }
+}

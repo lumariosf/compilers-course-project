@@ -1,0 +1,5 @@
+Graph Route {
+    Node = {north, south, east}
+}
+Route.short_dist(north, east)
+Route.short_dist(south, north)

@@ -1,0 +1,4 @@
+Graph TrailingDot {
+    NodeType Values { amount: Number }
+    Node = values : Values { amount: 5. }
+}

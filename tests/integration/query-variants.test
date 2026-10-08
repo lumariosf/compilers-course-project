@@ -1,0 +1,42 @@
+# short_dist parses node identifiers different from the ones in the existing query fixture.
+$ cargo run --quiet -- tests/integration/query-short-dist-variants.graph | grep -E 'ShortDist \{|name: "(north|south|east)"'
+                        name: "north",
+                        name: "south",
+                        name: "east",
+                ShortDist {
+                        name: "north",
+                        name: "east",
+                ShortDist {
+                        name: "south",
+                        name: "north",
+>2
+>= 0
+
+# A filter combines and, or, and not in one accepted expression.
+$ cargo run --quiet -- tests/integration/query-filter-logic.graph | sed -E 's/^[[:space:]]*//' | grep -E '^(kind: (Binario|Unario)\(|And,|Or,|Not,)'
+kind: Binario(
+kind: Binario(
+kind: Binario(
+And,
+kind: Binario(
+Or,
+kind: Unario(
+Not,
+kind: Binario(
+>2
+>= 0
+
+# NOTA: comportamento diferente da intenção/documentação: merge com uma ponte não é aceito pela gramática atual.
+$ cargo run --quiet -- tests/integration/query-merge-one-bridge.graph
+>2 /.*Erro de parsing:.*/
+>= 0
+
+# NOTA: comportamento diferente da intenção/documentação: merge com uma ponte `--` sem peso também é rejeitado pela gramática atual.
+$ cargo run --quiet -- tests/integration/query-merge-one-undirected-bridge.graph
+>2 /.*Erro de parsing:.*/
+>= 0
+
+# NOTA: comportamento diferente da intenção/documentação: merge com várias pontes não é aceito pela gramática atual.
+$ cargo run --quiet -- tests/integration/query-merge-multiple-bridges.graph
+>2 /.*Erro de parsing:.*/
+>= 0

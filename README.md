@@ -21,17 +21,45 @@ Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop]
 ├── tests/
 │   ├── integration/
 │   │   ├── examples.test
+│   │   ├── ast-values.graph
+│   │   ├── ast-values.test
 │   │   ├── graph-features.graph
 │   │   ├── graph-features.test
+│   │   ├── query-filter-logic.graph
+│   │   ├── query-merge-multiple-bridges.graph
+│   │   ├── query-merge-one-bridge.graph
+│   │   ├── query-merge-one-undirected-bridge.graph
+│   │   ├── query-short-dist-variants.graph
+│   │   ├── query-variants.test
 │   │   ├── queries.graph
-│   │   └── queries.test
+│   │   ├── queries.test
+│   │   ├── snapshot-short-dist.graph
+│   │   ├── snapshot-two-nodes.graph
+│   │   ├── snapshot-weighted-edge.graph
+│   │   └── snapshots.test
 │   ├── lexer/
+│   │   ├── boolean-case.graph
+│   │   ├── boundary-cases.test
+│   │   ├── digits-only-identifier.graph
 │   │   ├── identifiers.graph
 │   │   ├── identifiers.test
-│   │   └── invalid-token.graph
+│   │   ├── invalid-token.graph
+│   │   ├── keyword-as-identifier.graph
+│   │   ├── number-leading-dot.graph
+│   │   ├── number-trailing-dot.graph
+│   │   └── string-unclosed-quote.graph
 │   └── parser/
+│       ├── additional-cases.test
+│       ├── edge-missing-destination.graph
+│       ├── filter-double-pipe.graph
+│       ├── graph-missing-name.graph
+│       ├── identifier-leading-digit.graph
+│       ├── identifier-leading-underscore.graph
+│       ├── merge-no-bridges.graph
+│       ├── merge-unqualified-bridge.graph
 │       ├── malformed.graph
 │       ├── negative-edge-weight.graph
+│       ├── nodetype-trailing-comma.graph
 │       ├── program-boundaries.graph
 │       └── program-boundaries.test
 ├── .gitignore
@@ -76,26 +104,62 @@ Não há configuração específica do ShellTestRunner no `Cargo.toml` nem um ar
 tests/
 ├── integration/
 │   ├── examples.test
+│   ├── ast-values.graph
+│   ├── ast-values.test
 │   ├── graph-features.graph
 │   ├── graph-features.test
+│   ├── query-filter-logic.graph
+│   ├── query-merge-multiple-bridges.graph
+│   ├── query-merge-one-bridge.graph
+│   ├── query-merge-one-undirected-bridge.graph
+│   ├── query-short-dist-variants.graph
+│   ├── query-variants.test
 │   ├── queries.graph
-│   └── queries.test
+│   ├── queries.test
+│   ├── snapshot-short-dist.graph
+│   ├── snapshot-two-nodes.graph
+│   ├── snapshot-weighted-edge.graph
+│   └── snapshots.test
 ├── lexer/
+│   ├── boolean-case.graph
+│   ├── boundary-cases.test
+│   ├── digits-only-identifier.graph
 │   ├── identifiers.graph
 │   ├── identifiers.test
-│   └── invalid-token.graph
+│   ├── invalid-token.graph
+│   ├── keyword-as-identifier.graph
+│   ├── number-leading-dot.graph
+│   ├── number-trailing-dot.graph
+│   └── string-unclosed-quote.graph
 └── parser/
+    ├── additional-cases.test
+    ├── edge-missing-destination.graph
+    ├── filter-double-pipe.graph
+    ├── graph-missing-name.graph
+    ├── identifier-leading-digit.graph
+    ├── identifier-leading-underscore.graph
+    ├── merge-no-bridges.graph
+    ├── merge-unqualified-bridge.graph
     ├── malformed.graph
     ├── negative-edge-weight.graph
+    ├── nodetype-trailing-comma.graph
     ├── program-boundaries.graph
     └── program-boundaries.test
 ```
 
-- `tests/lexer/`: verifica identificadores com letras, dígitos e sublinhados e o diagnóstico para um caractere inválido. Como o lexer é exercitado pela CLI, esses casos também passam pelo parser.
-- `tests/parser/`: verifica programa vazio (fonte contendo apenas comentário), bloco sem fechamento e peso negativo de aresta, que não é aceito pela gramática atual.
-- `tests/integration/`: combina construções da linguagem e cobre os exemplos existentes em `examples/`. Verifica tipos e atributos de nós, literais, expressões, arestas direcionadas e não direcionadas, chamadas `short_dist`, `filter` e `merge` na AST, além dos erros de uso e leitura de arquivo da CLI.
+- `tests/lexer/`: verifica identificadores e tokens inválidos, aspas de string não fechadas, maiúsculas/minúsculas de booleanos, formatos `.5` e `5.`, palavras reservadas usadas como identificadores e nomes compostos apenas por dígitos. Como os testes chamam a CLI, também exercitam a interação com o parser.
+- `tests/parser/`: cobre programa vazio, sintaxe incompleta, aresta sem destino, declaração `Graph` sem nome, identificadores que começam por `_` ou dígito, vírgula final em `NodeType`, formas de `merge` e uso de `||` em filtro. Alguns casos registram aceitações e rejeições reais da gramática que não coincidem com a intenção/documentação; consulte “Limitações conhecidas”.
+- `tests/integration/`: combina construções e cobre os exemplos existentes em `examples/`; verifica valores selecionados da AST (nomes, atributos, booleanos, pesos e tipos de aresta), variações de `short_dist` e `filter`, tentativas de `merge` com pontes, e erros da CLI. `snapshots.test` compara a AST completa em três programas pequenos; outros testes usam `grep` para selecionar trechos.
 
 O arquivo `examples.test` executa `examples/grafo1.graph` até `examples/grafo9.graph` e `examples/test.graph`. Os exemplos de `grafo1` a `grafo5` e `test.graph` são aceitos pelo parser; `grafo6` a `grafo9` são casos inválidos que verificam os diagnósticos atuais. A aceitação de uma chamada de consulta nesses testes significa que sua sintaxe foi analisada e representada na AST, não que a consulta tenha sido executada.
+
+### Limitações conhecidas
+
+- A CLI retorna status `0` mesmo quando encontra erro de leitura ou parsing. Os testes mantêm `>= 0` e validam os diagnósticos em `stderr`.
+- Não há testes semânticos nem testes de execução de consultas: a implementação testada aqui produz a AST e não executa `short_dist`, `filter` ou `merge`.
+- Os testes com `grep` verificam apenas a presença e os valores selecionados pela expressão de busca, não a AST inteira. As três entradas de `snapshots.test` são exceções e comparam toda a AST formatada.
+- A gramática aceita vírgula final na lista de campos de `NodeType` e aceita a chamada `merge` sem pontes. A forma `.merge(Grafo, pontes...)` com pontes qualificadas é rejeitada pela gramática atual, assim como `||` em uma expressão de filtro. Os testes registram esses resultados reais sem alterar o compilador.
+- O token `True` produz um literal booleano; `true` minúsculo é reconhecido como identificador e pode aparecer na AST de um atributo, pois não há verificação semântica de tipos nessa etapa.
 
 ### Formato e exemplo
 

@@ -45,7 +45,7 @@ $ cargo run --quiet -- examples/grafo7.graph
 
 # Existing example: invalid parentheses in a node list.
 $ cargo run --quiet -- examples/grafo8.graph
->2 /.*Erro de parsing:.*/
+>2 /.*Erro de parsing:.*/ 
 >= 0
 
 # Existing example: unclosed graph declaration.

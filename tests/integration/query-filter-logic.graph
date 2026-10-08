@@ -1,0 +1,2 @@
+Graph Logic {}
+Logic.filter(for e in Logic | e.weight > 2 and e.weight < 9 or not e.destination == "blocked")
