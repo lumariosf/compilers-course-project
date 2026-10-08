@@ -1,0 +1,20 @@
+# Query syntax is parsed into AST calls; this does not execute queries or validate graph semantics.
+$ cargo run --quiet -- tests/integration/queries.graph | grep -E 'ShortDist \{|Filter \{|Merge \{|Binario\(|Unario\('
+                ShortDist {
+                Filter {
+                            kind: Binario(
+                                    kind: Binario(
+                                    kind: Unario(
+                                            kind: Binario(
+                Merge {
+>2
+>= 0
+
+# CLI usage and file-read errors are reported on stderr with status 0 today.
+$ cargo run --quiet --
+>2 /Uso: cargo run -- <arquivo>/
+>= 0
+
+$ cargo run --quiet -- tests/integration/no-such-input.graph
+>2 /.*Erro ao ler arquivo:.*/
+>= 0

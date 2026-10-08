@@ -1,0 +1,6 @@
+Graph Typed {
+    NodeType Person { name: String, age: Number, active: Option<Bool> }
+    Node = ana : Person { name: "Ana", age: -20, active: True }
+    Node = bia : Person { name: "Bia", age: 31, active: False }
+    Edge = { ana -> bia : 2.5, bia -- ana }
+}

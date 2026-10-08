@@ -1,0 +1,16 @@
+# An empty program is accepted because Programa permits zero items.
+$ cargo run --quiet -- tests/parser/program-boundaries.graph
+>
+[]
+>2
+>= 0
+
+# A missing closing brace is a parsing error.
+$ cargo run --quiet -- tests/parser/malformed.graph
+>2 /.*Erro de parsing:.*/
+>= 0
+
+# A negative edge weight is not part of the current edge grammar.
+$ cargo run --quiet -- tests/parser/negative-edge-weight.graph
+>2 /.*Erro de parsing:.*/
+>= 0
