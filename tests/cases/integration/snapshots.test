@@ -1,6 +1,6 @@
 # Snapshots cover small inputs with the complete AST; grep-based tests cover larger examples selectively.
 # Complete AST snapshot for a graph with two nodes and one directed edge.
-$ cargo run --quiet -- tests/integration/snapshot-two-nodes.graph
+$ cargo run --quiet -- tests/fixtures/integration/snapshots/snapshot-two-nodes.graph
 [
     Grafo(
         Grafo {
@@ -66,7 +66,7 @@ $ cargo run --quiet -- tests/integration/snapshot-two-nodes.graph
 >= 0
 
 # Complete AST snapshot for a weighted directed edge.
-$ cargo run --quiet -- tests/integration/snapshot-weighted-edge.graph
+$ cargo run --quiet -- tests/fixtures/integration/snapshots/snapshot-weighted-edge.graph
 [
     Grafo(
         Grafo {
@@ -134,7 +134,7 @@ $ cargo run --quiet -- tests/integration/snapshot-weighted-edge.graph
 >= 0
 
 # Complete AST snapshot for a graph followed by a short_dist query.
-$ cargo run --quiet -- tests/integration/snapshot-short-dist.graph
+$ cargo run --quiet -- tests/fixtures/integration/snapshots/snapshot-short-dist.graph
 [
     Grafo(
         Grafo {

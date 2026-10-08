@@ -9,9 +9,6 @@ Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop]
 
 ```text
 .
-├── examples/
-│   ├── grafo1.graph ... grafo9.graph
-│   └── test.graph
 ├── src/
 │   ├── ast.rs
 │   ├── grammar.lalrpop
@@ -19,49 +16,16 @@ Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop]
 │   ├── lexer.rs
 │   └── main.rs
 ├── tests/
-│   ├── integration/
-│   │   ├── examples.test
-│   │   ├── ast-values.graph
-│   │   ├── ast-values.test
-│   │   ├── graph-features.graph
-│   │   ├── graph-features.test
-│   │   ├── query-filter-logic.graph
-│   │   ├── query-merge-multiple-bridges.graph
-│   │   ├── query-merge-one-bridge.graph
-│   │   ├── query-merge-one-undirected-bridge.graph
-│   │   ├── query-short-dist-variants.graph
-│   │   ├── query-variants.test
-│   │   ├── queries.graph
-│   │   ├── queries.test
-│   │   ├── snapshot-short-dist.graph
-│   │   ├── snapshot-two-nodes.graph
-│   │   ├── snapshot-weighted-edge.graph
-│   │   └── snapshots.test
-│   ├── lexer/
-│   │   ├── boolean-case.graph
-│   │   ├── boundary-cases.test
-│   │   ├── digits-only-identifier.graph
-│   │   ├── identifiers.graph
-│   │   ├── identifiers.test
-│   │   ├── invalid-token.graph
-│   │   ├── keyword-as-identifier.graph
-│   │   ├── number-leading-dot.graph
-│   │   ├── number-trailing-dot.graph
-│   │   └── string-unclosed-quote.graph
-│   └── parser/
-│       ├── additional-cases.test
-│       ├── edge-missing-destination.graph
-│       ├── filter-double-pipe.graph
-│       ├── graph-missing-name.graph
-│       ├── identifier-leading-digit.graph
-│       ├── identifier-leading-underscore.graph
-│       ├── merge-no-bridges.graph
-│       ├── merge-unqualified-bridge.graph
-│       ├── malformed.graph
-│       ├── negative-edge-weight.graph
-│       ├── nodetype-trailing-comma.graph
-│       ├── program-boundaries.graph
-│       └── program-boundaries.test
+│   ├── README.md
+│   ├── cases/
+│   │   ├── integration/*.test
+│   │   ├── lexer/*.test
+│   │   └── parser/*.test
+│   └── fixtures/
+│       ├── examples/ (grafo1.graph ... grafo9.graph, test.graph)
+│       ├── integration/{features,queries,snapshots}/*.graph
+│       ├── lexer/*.graph
+│       └── parser/*.graph
 ├── .gitignore
 ├── build.rs
 ├── Cargo.lock
@@ -71,202 +35,103 @@ Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop]
 
 ## Testes automatizados
 
-### Objetivo e escopo
+A suíte verifica regressões no lexer, no parser e na CLI do compilador. O executável lê um arquivo `.graph` e imprime a AST em `stdout` quando o parsing é aceito; erros de leitura ou parsing vão para `stderr`. **A CLI retorna status `0` mesmo nos erros**, e os testes registram esse comportamento sem alterá-lo.
 
-A suíte automatizada verifica regressões na análise léxica, na análise sintática e na interface de linha de comando do compilador GRAPH. Os casos exercitam entradas válidas e inválidas e comparam a saída observada com as expectativas definidas para cada comando.
+Os testes não executam consultas nem verificam regras semânticas, apenas a sintaxe e a AST.
 
-O executável atual lê um arquivo GRAPH, analisa o conteúdo e, quando aceito, imprime a AST formatada em `stdout`. Erros de leitura ou parsing são escritos em `stderr`. A suíte verifica esse comportamento, incluindo o código de saída atual: a CLI retorna `0` também nos casos de erro. Os testes não executam consultas nem verificam regras semânticas; não há uma categoria `semantic/` porque essa etapa não está implementada na CLI atual.
+### 1. ShellTestRunner
 
-### ShellTestRunner
+Os testes usam o [ShellTestRunner](https://github.com/simonmichael/shelltestrunner) (`shelltest`), que executa um comando de terminal e compara `stdout`, `stderr` e o código de saída com o esperado. Ele foi escolhido porque o compilador é uma CLI e assim nenhuma linha do código de produção precisa ser alterada.
 
-[ShellTestRunner](https://github.com/simonmichael/shelltestrunner), executado pelo comando `shelltest`, é uma ferramenta externa para testar programas e comandos de terminal. Ele foi escolhido porque o compilador é usado como CLI e seus testes precisam verificar comandos, `stdout`, `stderr` e status de saída sem alterar o código de produção.
+Cada arquivo `.test` contém um ou mais casos neste formato:
 
-Cada arquivo `.test` descreve um ou mais casos usando o formato 3 do ShellTestRunner:
-
-| Elemento | Significado nesta suíte |
+| Elemento | Significado |
 | --- | --- |
-| Arquivo `.test` | Especificação de casos e expectativas que o `shelltest` executa. |
-| `$ comando` | Comando de shell a executar. Nos casos GRAPH, chama `cargo run --quiet --` com um arquivo de entrada. |
-| Entrada | O programa recebe o caminho do arquivo `.graph` como argumento. Os testes atuais não enviam o código GRAPH por `stdin`. |
-| `stdout` | Saída padrão do comando. Nos testes válidos, alguns comandos usam `sed` e `grep` para selecionar partes da AST antes da comparação. |
-| `>2` | Inicia a expectativa de `stderr`; pode ser texto literal ou uma expressão regular entre barras, como `>2 /.*Erro de parsing:.*/`. |
-| `>= código` | Código de saída esperado. Os testes atuais especificam `>= 0`, inclusive para erros reportados pela CLI. |
-| Saída esperada | Linhas escritas depois do comando (ou depois de `>`) até o próximo marcador. Para uma expectativa por regex, usa-se o marcador de stream seguido por `/expressão/`. |
-| PASS / FAIL | O runner compara os streams e o status obtidos com as expectativas. Casos aprovados aparecem como `[OK]`; casos reprovados como `[Failed]`. |
+| `# texto` | Comentário que descreve o caso. |
+| `$ comando` | Comando a executar, sempre `cargo run --quiet -- <arquivo.graph>`. |
+| Linhas seguintes | `stdout` esperado. Se não houver nenhuma, espera-se `stdout` vazio. |
+| `>2` | `stderr` esperado, em texto literal ou regex entre barras (`>2 /.*Erro de parsing:.*/`). Sem nada depois, espera-se `stderr` vazio. |
+| `>= 0` | Código de saída esperado. |
 
-Quando um stream não tem conteúdo esperado, o teste o deixa vazio. Por exemplo, um teste que começa suas expectativas com `>2` espera `stdout` vazio e verifica `stderr`.
+Alguns casos usam `sed` e `grep` para selecionar só trechos da AST antes de comparar.
 
-Não há configuração específica do ShellTestRunner no `Cargo.toml` nem um arquivo separado do runner. Os comandos, entradas e expectativas estão nos próprios `.test`; os arquivos `.graph` ao lado deles são fixtures usadas como entrada.
-
-### Estrutura e cobertura
+### 2. Estrutura
 
 ```text
 tests/
-├── integration/
-│   ├── examples.test
-│   ├── ast-values.graph
-│   ├── ast-values.test
-│   ├── graph-features.graph
-│   ├── graph-features.test
-│   ├── query-filter-logic.graph
-│   ├── query-merge-multiple-bridges.graph
-│   ├── query-merge-one-bridge.graph
-│   ├── query-merge-one-undirected-bridge.graph
-│   ├── query-short-dist-variants.graph
-│   ├── query-variants.test
-│   ├── queries.graph
-│   ├── queries.test
-│   ├── snapshot-short-dist.graph
-│   ├── snapshot-two-nodes.graph
-│   ├── snapshot-weighted-edge.graph
-│   └── snapshots.test
-├── lexer/
-│   ├── boolean-case.graph
-│   ├── boundary-cases.test
-│   ├── digits-only-identifier.graph
-│   ├── identifiers.graph
-│   ├── identifiers.test
-│   ├── invalid-token.graph
-│   ├── keyword-as-identifier.graph
-│   ├── number-leading-dot.graph
-│   ├── number-trailing-dot.graph
-│   └── string-unclosed-quote.graph
-└── parser/
-    ├── additional-cases.test
-    ├── edge-missing-destination.graph
-    ├── filter-double-pipe.graph
-    ├── graph-missing-name.graph
-    ├── identifier-leading-digit.graph
-    ├── identifier-leading-underscore.graph
-    ├── merge-no-bridges.graph
-    ├── merge-unqualified-bridge.graph
-    ├── malformed.graph
-    ├── negative-edge-weight.graph
-    ├── nodetype-trailing-comma.graph
-    ├── program-boundaries.graph
-    └── program-boundaries.test
+├── cases/                 # arquivos .test (comandos e expectativas)
+│   ├── lexer/
+│   ├── parser/
+│   └── integration/
+└── fixtures/              # arquivos .graph (entradas)
+    ├── examples/          # grafo1.graph ... grafo9.graph, test.graph
+    ├── lexer/
+    ├── parser/
+    └── integration/{features,queries,snapshots}/
 ```
 
-- `tests/lexer/`: verifica identificadores e tokens inválidos, aspas de string não fechadas, maiúsculas/minúsculas de booleanos, formatos `.5` e `5.`, palavras reservadas usadas como identificadores e nomes compostos apenas por dígitos. Como os testes chamam a CLI, também exercitam a interação com o parser.
-- `tests/parser/`: cobre programa vazio, sintaxe incompleta, aresta sem destino, declaração `Graph` sem nome, identificadores que começam por `_` ou dígito, vírgula final em `NodeType`, formas de `merge` e uso de `||` em filtro. Alguns casos registram aceitações e rejeições reais da gramática que não coincidem com a intenção/documentação; consulte “Limitações conhecidas”.
-- `tests/integration/`: combina construções e cobre os exemplos existentes em `examples/`; verifica valores selecionados da AST (nomes, atributos, booleanos, pesos e tipos de aresta), variações de `short_dist` e `filter`, tentativas de `merge` com pontes, e erros da CLI. `snapshots.test` compara a AST completa em três programas pequenos; outros testes usam `grep` para selecionar trechos.
+- **`lexer/`**: identificadores, token inválido, string sem aspas de fechamento, `True` vs `true`, números `.5` e `5.`, palavra reservada como identificador e nome só com dígitos.
+- **`parser/`**: programa vazio, bloco sem fechamento, peso negativo, aresta sem destino, `Graph` sem nome, identificador iniciado por `_` ou dígito, vírgula final em `NodeType`, formas de `merge` e `||` em filtro.
+- **`integration/`**: combinações de recursos, valores da AST, variações de `short_dist`, `filter` e `merge`, erros da CLI e os exemplos de `fixtures/examples/`.
 
-O arquivo `examples.test` executa `examples/grafo1.graph` até `examples/grafo9.graph` e `examples/test.graph`. Os exemplos de `grafo1` a `grafo5` e `test.graph` são aceitos pelo parser; `grafo6` a `grafo9` são casos inválidos que verificam os diagnósticos atuais. A aceitação de uma chamada de consulta nesses testes significa que sua sintaxe foi analisada e representada na AST, não que a consulta tenha sido executada.
+Os exemplos `grafo1` a `grafo5` e `test.graph` são aceitos; `grafo6` a `grafo9` são rejeitados de propósito.
 
-### Limitações conhecidas
+### 3. Exemplos
 
-- A CLI retorna status `0` mesmo quando encontra erro de leitura ou parsing. Os testes mantêm `>= 0` e validam os diagnósticos em `stderr`.
-- Não há testes semânticos nem testes de execução de consultas: a implementação testada aqui produz a AST e não executa `short_dist`, `filter` ou `merge`.
-- Os testes com `grep` verificam apenas a presença e os valores selecionados pela expressão de busca, não a AST inteira. As três entradas de `snapshots.test` são exceções e comparam toda a AST formatada.
-- A gramática aceita vírgula final na lista de campos de `NodeType` e aceita a chamada `merge` sem pontes. A forma `.merge(Grafo, pontes...)` com pontes qualificadas é rejeitada pela gramática atual, assim como `||` em uma expressão de filtro. Os testes registram esses resultados reais sem alterar o compilador.
-- O token `True` produz um literal booleano; `true` minúsculo é reconhecido como identificador e pode aparecer na AST de um atributo, pois não há verificação semântica de tipos nessa etapa.
-
-### Formato e exemplo
-
-Este caso está em `tests/integration/examples.test`:
+**Caso válido** (`cases/integration/examples.test`):
 
 ```text
-$ cargo run --quiet -- examples/grafo1.graph | sed -E 's/^[[:space:]]*//' | grep -E '^(Grafo|Consulta)\('
+$ cargo run --quiet -- tests/fixtures/examples/grafo1.graph | sed -E 's/^[[:space:]]*//' | grep -E '^(Grafo|Consulta)\('
 Grafo(
 Consulta(
 >2
 >= 0
 ```
 
-Passo a passo:
+*Executa o exemplo, mantém só as linhas `Grafo(` e `Consulta(` da AST e confere que há um grafo e uma consulta, com `stderr` vazio e status 0.*
 
-1. `$` inicia o comando. `cargo run --quiet -- examples/grafo1.graph` executa o compilador usando o exemplo existente como arquivo de entrada. O restante do comando remove a indentação da AST e seleciona os itens `Grafo(` e `Consulta(`.
-2. As duas linhas seguintes são o `stdout` esperado depois dos filtros. Assim, o caso confirma que esse exemplo gera uma declaração de grafo e uma consulta na AST.
-3. `>2` inicia a expectativa de `stderr`, que fica vazia neste caso válido.
-4. `>= 0` exige status de saída zero.
-
-Um exemplo de erro real, em `tests/lexer/identifiers.test`, é:
+**Caso inválido** (`cases/lexer/identifiers.test`):
 
 ```text
-$ cargo run --quiet -- tests/lexer/invalid-token.graph
+$ cargo run --quiet -- tests/fixtures/lexer/invalid-token.graph
 >2 /.*Erro de parsing:.*Token inválido na posição.*/
 >= 0
 ```
 
-O fixture contém `@`, que não é um token válido. A regex verifica a mensagem enviada a `stderr`; como não há linhas de saída esperada antes de `>2`, espera-se `stdout` vazio. O status `0` registra o comportamento atual da CLI ao reportar esse erro.
+*O fixture contém `@`. Não há `stdout` esperado, e a regex confere a mensagem em `stderr`.*
 
-### Instalação e compilação
+Há três estilos de verificação: **filtro com `grep`** (presença de construções e valores selecionados), **snapshot** (AST completa, em `snapshots.test`, para programas pequenos) e **regex em `stderr`** (casos inválidos).
 
-O projeto usa Rust e Cargo. No ambiente Linux atual, compatível com Debian/Ubuntu, instale o ShellTestRunner com:
+### 4. Executando os testes
+
+Instale o ShellTestRunner (Debian/Ubuntu) e rode a partir da raiz do repositório:
 
 ```sh
-sudo apt update
 sudo apt install shelltestrunner
+shelltest tests                                    # toda a suíte
+shelltest tests/cases/lexer                        # uma categoria
+shelltest tests/cases/integration/examples.test    # um arquivo
 ```
 
-Confira a instalação com `shelltest --version`. A suíte foi verificada com ShellTestRunner 1.9. O runner é uma ferramenta do sistema, não uma dependência Cargo do projeto.
+O `shelltest` é uma ferramenta do sistema, não uma dependência do Cargo. Ele busca `.test` recursivamente, e o `cargo run` compila o projeto se for preciso.
 
-Compile o compilador a partir da raiz do repositório:
+`[OK]` indica que o caso passou e `[Failed]` indica divergência, mostrando `Expected` e `Got`. Uma mensagem `Erro de parsing: ...` pode ser o resultado **esperado** de um caso inválido. Já erro de compilação Rust, `shelltest` não encontrado ou caminho de fixture errado indicam problema de ambiente ou de configuração.
 
-```sh
-cargo build
-```
+### 5. Adicionando um teste
 
-O executável de debug gerado é `target/debug/compilers-course-project`. Para executar diretamente um programa GRAPH:
+1. Crie o fixture `.graph` em `tests/fixtures/<categoria>/`.
+2. Crie ou edite o `.test` em `tests/cases/<categoria>/` com `$`, o `stdout` esperado, `>2` e `>=`.
+3. Rode o arquivo (`shelltest tests/cases/parser/novo-caso.test`) e confirme `[OK]`.
 
-```sh
-./target/debug/compilers-course-project examples/grafo1.graph
-```
+Cada caso deve verificar **um comportamento**. Não altere o código de produção só para fazer um teste passar.
 
-Também é possível executá-lo através do Cargo, como fazem os testes:
+### 6. Limitações conhecidas
 
-```sh
-cargo run --quiet -- examples/grafo1.graph
-```
-
-### Executar os testes
-
-Execute os comandos a partir da raiz do repositório, onde os caminhos relativos dos testes são válidos.
-
-Para compilar e depois executar todos os testes:
-
-```sh
-cargo build && shelltest tests
-```
-
-O comando direto para executar toda a suíte é:
-
-```sh
-shelltest tests
-```
-
-Para executar uma categoria ou um arquivo individual:
-
-```sh
-shelltest tests/lexer
-shelltest tests/integration
-shelltest tests/integration/examples.test
-```
-
-O ShellTestRunner procura arquivos `.test` recursivamente quando recebe um diretório. Cada comando de teste usa `cargo run --quiet --`, que compila ou reutiliza a compilação conforme necessário; por isso `cargo build` é uma etapa preparatória opcional, mas útil para confirmar a compilação antes da suíte.
-
-### Interpretar os resultados
-
-O ShellTestRunner lista o resultado de cada caso e apresenta um resumo com `Passed`, `Failed` e `Total`. `[OK]` indica que as saídas e o status correspondem às expectativas; `[Failed]` indica divergência. A saída da falha informa valores como `Expected stdout` e `Got stdout` (ou equivalentes para `stderr` e status), permitindo localizar o que mudou.
-
-Uma mensagem `Erro de parsing: ...` ou `Erro ao ler arquivo: ...` emitida pelo compilador pode ser o resultado esperado de um caso inválido e, nesse caso, o teste passa. O teste falha se a mensagem não corresponder à expectativa. Já uma mensagem de erro de compilação Rust, um comando `shelltest` não encontrado, um caminho de fixture incorreto ou um erro de sintaxe no `.test` aponta para uma falha de build, ambiente, execução ou configuração do teste, e não para o diagnóstico GRAPH esperado.
-
-Na implementação atual, erros da CLI não retornam status diferente de zero. Por isso os casos inválidos esperam `>= 0` e verificam o texto em `stderr`; esses testes documentam o comportamento existente, sem alterá-lo.
-
-### Adicionar um teste
-
-1. Crie ou escolha a categoria correspondente em `tests/`: `lexer/`, `parser/` ou `integration/`. Use integração quando o caso combinar funcionalidades ou usar um dos exemplos gerais.
-2. Crie um arquivo `.test` nessa pasta. Se o compilador precisar de uma entrada GRAPH, crie também um fixture `.graph`; a CLI recebe esse arquivo como argumento.
-3. Adicione um comando iniciado por `$`. Declare as linhas esperadas de `stdout`; use `>2` para verificar `stderr` e `>=` para o código de saída. Para mensagens variáveis, use uma regex delimitada por `/`.
-4. Execute o arquivo específico, por exemplo `shelltest tests/parser/novo-caso.test`, ou toda a categoria, por exemplo `shelltest tests/parser`.
-5. Confirme `[OK]` no caso e o resumo sem falhas. Em `[Failed]`, compare a saída esperada com a saída obtida antes de decidir se a expectativa ou o comportamento do compilador deve mudar.
-
-### Boas práticas
-
-- Faça cada caso verificar um comportamento específico e mantenha casos válidos, inválidos, de erro e de borda.
-- Organize `.test` e fixtures pela funcionalidade que exercitam e use caminhos relativos à raiz do projeto.
-- Não altere o código de produção apenas para fazer um teste passar; primeiro confirme o comportamento definido pela implementação e pela linguagem.
-- Atualize as expectativas quando o comportamento esperado do compilador mudar e execute novamente a suíte completa.
+- A CLI retorna status `0` nos erros, por isso os casos inválidos esperam `>= 0`.
+- Não há testes semânticos nem de execução de consultas.
+- Os testes com `grep` verificam só o que o filtro seleciona; apenas os snapshots comparam a AST inteira.
+- **A gramática diverge da documentação em alguns pontos**: aceita vírgula final em `NodeType` e `merge` sem pontes, e rejeita `merge` com pontes qualificadas. Os testes registram o comportamento real, com a marca `# NOTA` no `.test`.
+- `true` minúsculo é aceito como identificador, pois não há checagem semântica de tipos.
 
 ## Documentação
 Com GRAPH, você pode declarar um grafo, especificar seus nós e suas arestas, e fazer consultas sobre ele.

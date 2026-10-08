@@ -1,41 +1,41 @@
 # A directed edge without a destination is rejected by the parser.
-$ cargo run --quiet -- tests/parser/edge-missing-destination.graph
+$ cargo run --quiet -- tests/fixtures/parser/edge-missing-destination.graph
 >2 /.*Erro de parsing:.*/
 >= 0
 
 # A Graph declaration requires an identifier.
-$ cargo run --quiet -- tests/parser/graph-missing-name.graph
+$ cargo run --quiet -- tests/fixtures/parser/graph-missing-name.graph
 >2 /.*Erro de parsing:.*/
 >= 0
 
 # An identifier beginning with an underscore is rejected as an invalid token.
-$ cargo run --quiet -- tests/parser/identifier-leading-underscore.graph
+$ cargo run --quiet -- tests/fixtures/parser/identifier-leading-underscore.graph
 >2 /.*Erro de parsing:.*Token inválido na posição.*/
 >= 0
 
 # An identifier beginning with a digit is tokenized as a number and rejected in this position.
-$ cargo run --quiet -- tests/parser/identifier-leading-digit.graph
+$ cargo run --quiet -- tests/fixtures/parser/identifier-leading-digit.graph
 >2 /.*Erro de parsing:.*/
 >= 0
 
 # NOTA: comportamento diferente do esperado pela tarefa: a gramática aceita vírgula final em NodeType.
-$ cargo run --quiet -- tests/parser/nodetype-trailing-comma.graph | sed -E 's/^[[:space:]]*//' | grep -E '^Tipo\('
+$ cargo run --quiet -- tests/fixtures/parser/nodetype-trailing-comma.graph | sed -E 's/^[[:space:]]*//' | grep -E '^Tipo\('
 Tipo(
 >2
 >= 0
 
 # NOTA: comportamento diferente do esperado pela documentação: merge sem pontes é aceito como chamada Merge simples.
-$ cargo run --quiet -- tests/parser/merge-no-bridges.graph | grep -E '^                Merge \{'
+$ cargo run --quiet -- tests/fixtures/parser/merge-no-bridges.graph | grep -E '^                Merge \{'
                 Merge {
 >2
 >= 0
 
 # A bridge without graph-qualified endpoints is rejected by the current parser.
-$ cargo run --quiet -- tests/parser/merge-unqualified-bridge.graph
+$ cargo run --quiet -- tests/fixtures/parser/merge-unqualified-bridge.graph
 >2 /.*Erro de parsing:.*/
 >= 0
 
 # The filter expression grammar uses `or`; two pipe tokens are rejected.
-$ cargo run --quiet -- tests/parser/filter-double-pipe.graph
+$ cargo run --quiet -- tests/fixtures/parser/filter-double-pipe.graph
 >2 /.*Erro de parsing:.*/
 >= 0

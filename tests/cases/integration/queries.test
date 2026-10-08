@@ -1,5 +1,5 @@
 # Query syntax is parsed into AST calls; this does not execute queries or validate graph semantics.
-$ cargo run --quiet -- tests/integration/queries.graph | grep -E 'ShortDist \{|Filter \{|Merge \{|Binario\(|Unario\('
+$ cargo run --quiet -- tests/fixtures/integration/queries/queries.graph | grep -E 'ShortDist \{|Filter \{|Merge \{|Binario\(|Unario\('
                 ShortDist {
                 Filter {
                             kind: Binario(
@@ -15,6 +15,6 @@ $ cargo run --quiet --
 >2 /Uso: cargo run -- <arquivo>/
 >= 0
 
-$ cargo run --quiet -- tests/integration/no-such-input.graph
+$ cargo run --quiet -- tests/fixtures/integration/no-such-input.graph
 >2 /.*Erro ao ler arquivo:.*/
 >= 0
