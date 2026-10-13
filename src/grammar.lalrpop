@@ -70,6 +70,7 @@ pub Programa: Vec<Item> = {
 
 Item: Item = {
     <g:DeclaracaoGrafo> => Item::Grafo(g),
+    <m:DeclaracaoGrafoMerge> => Item::GrafoMerge(m),
     <c:ComandoConsulta> => Item::Consulta(c),
 };
 
@@ -91,6 +92,16 @@ DeclaracaoGrafo: Grafo = {
     <l:@L> "Graph" <nome:Ident> "{" <itens:ItemGrafo*> "}" <r:@R> => Grafo {
         nome,
         membros: itens.into_iter().flatten().collect(),
+        span: Span { start: l, end: r },
+    },
+};
+
+DeclaracaoGrafoMerge: GrafoMerge = {
+    <l:@L> "Graph" <nome:Ident> "=" <g1:Ident> "." "merge" "(" <g2:Ident> <pontes:("," <Ponte>)*> ")" <r:@R> => GrafoMerge {
+        nome,
+        g1,
+        g2,
+        pontes,
         span: Span { start: l, end: r },
     },
 };
@@ -229,10 +240,6 @@ Chamada: Chamada = {
             filtro: f,
         }
     },
-
-    "merge" "(" <grafo_alvo:Ident> ")" => {
-        Chamada::Merge { grafo_alvo }
-    },
 };
 
 
@@ -257,21 +264,22 @@ Filtro: Filtro = {
 
 // ========== MERGE
 
-MergeArgs: MergeArgs = {
-    <og:"ident">
-    "."
-    <on:"ident">
+Ponte: Ponte = {
+    <l:@L>
+    <g_origem:Ident> "." <no_origem:Ident>
     <tipo:TipoAresta>
-    <dg:"ident">
-    "."
-    <dn:"ident">
+    <g_destino:Ident> "." <no_destino:Ident>
     <peso:Peso>
+    <r:@R>
     => {
-        MergeArgs {
-            origem: (og, on),
-            destino: (dg, dn),
+        Ponte {
+            g_origem,
+            no_origem,
             tipo,
+            g_destino,
+            no_destino,
             peso,
+            span: Span { start: l, end: r },
         }
     },
 };

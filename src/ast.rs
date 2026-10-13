@@ -1,6 +1,7 @@
 #[derive(Debug, Clone, PartialEq)]
 pub enum Item {
     Grafo(Grafo),
+    GrafoMerge(GrafoMerge),
     Consulta(ExpressaoConsulta),
 }
 
@@ -15,6 +16,26 @@ pub struct Ident { pub name: String, pub span: Span }
 pub struct Grafo {
     pub nome: Ident,
     pub membros: Vec<Membro>,   // na ORDEM em que foram escritos
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GrafoMerge {
+    pub nome: Ident,
+    pub g1: Ident,
+    pub g2: Ident,
+    pub pontes: Vec<Ponte>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Ponte {
+    pub g_origem: Ident,
+    pub no_origem: Ident,
+    pub tipo: TipoAresta,
+    pub g_destino: Ident,
+    pub no_destino: Ident,
+    pub peso: Option<f64>,
     pub span: Span,
 }
 
@@ -63,13 +84,6 @@ pub struct Filtro {
     pub condicao: Expr,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct MergeArgs {
-    pub origem: (String, String), // (grafo, node)
-    pub destino: (String, String),
-    pub tipo: TipoAresta,
-    pub peso: Option<f64>,
-}
 
 //A ideia é que Expr sempre carrega o span (e.span), e ExprKind diz que forma a expressão tem.
 
@@ -139,4 +153,3 @@ pub struct Atributo {
     pub valor: Expr,
     pub span: Span,
 }
-
