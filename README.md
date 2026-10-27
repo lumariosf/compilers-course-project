@@ -204,6 +204,32 @@ exemplo.graph:5:19: erro: nó `carlos` não declarado em `G` antes desta aresta
 2 erro(s) semântico(s)
 ```
 
+#### Exemplos
+
+A pasta `examples/` tem programas que mostram o checker em ação. Os comentários `(ok)` e `(erro)` em cada arquivo indicam o que deve passar e onde cada erro deve aparecer.
+
+| Arquivo | Resultado esperado |
+|---------|--------------------|
+| `semantica_1_ok_completo.graph` | válido: usa todos os recursos da linguagem |
+| `semantica_2_ok_merge.graph` | válido: merge com pontes |
+| `semantica_3_erro_nos_e_arestas.graph` | 4 erros: nós e arestas |
+| `semantica_4_erro_atributos.graph` | 6 erros: `NodeType` e atributos |
+| `semantica_5_erro_merge.graph` | 5 erros: merge e pontes |
+| `semantica_6_erro_consultas.graph` | 10 erros: `short_dist` e `filter` |
+
+Para rodar um exemplo e ver só os erros (o `> /dev/null` esconde a AST, que é impressa quando o programa é válido):
+
+```bash
+cargo run -q -- examples/semantica_6_erro_consultas.graph > /dev/null
+echo $?   # 1 se houve erro, 0 se o programa é válido
+```
+
+Para rodar todos de uma vez:
+
+```bash
+for f in examples/semantica_*.graph; do echo "== $f"; cargo run -q -- "$f" > /dev/null; done
+```
+
 #### Erros detectados
 
 **Grafos, nós e arestas**
