@@ -1,0 +1,20 @@
+// PROGRAMA COM ERROS: consultas e tipagem do filter.
+
+Graph G {
+    NodeType Pessoa { nome: String, idade: Number }
+    Node = ana : Pessoa { nome: "Ana", idade: 20 }
+    Node = bia : Pessoa { nome: "Bia", idade: 31 }
+    Edge = ana -> bia : 4
+}
+Graph H { Node = x }
+
+G.short_dist(ana, zeca)                            // (erro) zeca não existe em G
+K.short_dist(ana, bia)                             // (erro) o grafo K não existe
+G.filter(for e in H | e.weight > 1)                // (erro) filtro de G percorrendo as arestas de H
+G.filter(for e in G | e.weight + 1)                // (erro) Number + Number dá Number, mas o filtro precisa de Bool
+G.filter(for e in G | e.peso > 1)                  // (erro) aresta só tem weight, origin, destination e type
+G.filter(for e in G | e.weight == "alto")          // (erro) compara Number com String
+G.filter(for e in G | x.weight > 1)                // (erro) a variável do for é `e`, não `x`
+G.filter(for e in G | e.origin == ana)             // (erro) nome de nó vai entre aspas: "ana"
+G.filter(for e in G | e.type == "=>")              // (erro) tipo de aresta é "->" ou "--"
+G.filter(for e in G | e.origin.email == "a@x")     // (erro) Pessoa não tem o campo `email`

@@ -1,0 +1,13 @@
+// PROGRAMA COM ERROS: NodeType e atributos.
+
+Graph G {
+    Node = zeca : Animal { especie: "gato" }   // (erro) Animal só é declarado na linha de baixo
+    NodeType Animal { especie: String }        // (ok) declaração válida, mas tarde demais para o zeca
+
+    NodeType Pessoa { nome: String, idade: Number, peso: Inteiro }  // (erro) `Inteiro` não é um tipo (use Number)
+
+    Node = ana  : Pessoa { nome: "Ana", idade: "vinte" }            // (erro) idade é Number, mas recebeu texto
+    Node = bia  : Pessoa { nome: "Bia", idade: 30, email: "b@x" }   // (erro) Pessoa não tem o campo `email`
+    Node = caio : Pessoa { nome: "Caio", idade: 1 + 2 }             // (erro) valor de atributo tem que ser literal
+    Node = duda : Pessoa { idade: 40 }                              // (erro) falta `nome`, que é obrigatório
+}

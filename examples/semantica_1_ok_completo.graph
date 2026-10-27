@@ -1,0 +1,21 @@
+// PROGRAMA VÁLIDO: todas as regras são respeitadas, o checker não acusa nada.
+
+Graph rede {
+    // (ok) campos com tipos válidos; `ativo` é opcional (Option), então pode ser omitido
+    NodeType Pessoa { nome: String, idade: Number, ativo: Option<Bool> }
+
+    Node = ana   : Pessoa { nome: "Ana", idade: 20 }                 // (ok) tem os 2 campos obrigatórios; `ativo` omitido
+    Node = bia   : Pessoa { idade: 31, nome: "Bia", ativo: True }    // (ok) a ordem dos atributos não importa
+    Node = carla : Pessoa { nome: "Carla", idade: 17, ativo: False } // (ok) cada valor tem o tipo declarado
+
+    Edge = {
+        ana -> bia : 5,     // (ok) os dois nós já foram declarados acima
+        bia -- carla : 2    // (ok) `--` vale nos dois sentidos (bia->carla e carla->bia)
+    }
+    Edge = carla -> ana     // (ok) sem peso: vale 1
+}
+
+rede.short_dist(ana, carla)                                                  // (ok) os dois nós existem em `rede`
+rede.filter(for e in rede | e.weight >= 2 and not e.destination == "carla")  // (ok) Number >= Number dá Bool; nó == "texto" compara pelo nome
+rede.filter(for e in rede | e.origin.idade > 18 and e.type == "->")          // (ok) todo nó tem `idade` (Number); "->" é um tipo de aresta válido
+rede.filter(for e in rede | e.destination.ativo == True)                     // (ok) Option<Bool> pode ser comparado com Bool
