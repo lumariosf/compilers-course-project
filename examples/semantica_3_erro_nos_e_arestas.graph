@@ -1,0 +1,11 @@
+// PROGRAMA COM ERROS: nós e arestas.
+
+Graph G {
+    Node = {a, b}          // (ok) declara a e b
+    Node = a               // (erro) `a` já foi declarado na linha acima
+    Edge = a -> x          // (erro) `x` nunca foi declarado
+    Edge = b -> c          // (erro) `c` só é declarado na linha de baixo (tem que vir ANTES)
+    Node = c               // (ok) declaração válida, mas tarde demais para a aresta acima
+    Edge = a -- b          // (ok) cria a->b e b->a
+    Edge = b -> a : 7      // (erro) b->a já existe por causa do `a -- b` acima
+}

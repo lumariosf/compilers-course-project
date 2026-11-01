@@ -1,0 +1,18 @@
+// PROGRAMA COM ERROS: merge.
+
+Graph G1 {
+    NodeType Pessoa { nome: String }
+    Node = {a, b}
+}
+
+Graph G2 {
+    NodeType Pessoa { nome: Number }   // sozinho é válido; causa o erro do merge na linha 16 (`nome` é String em G1)
+    Node = {a, c}                      // sozinho é válido; causa o erro do merge na linha 16 (`a` também existe em G1)
+}
+
+// (erro) o erro aparece no merge: nó `a` repetido e Pessoa diferente nos dois grafos
+// (erro) G1.a -> G1.b liga dois nós do mesmo grafo
+// (erro) G2.z não existe
+Graph G3 = G1.merge(G2, G1.a -> G1.b, G1.b -> G2.z)
+
+Graph G4 = G1.merge(G9)                // (erro) G9 nunca foi declarado

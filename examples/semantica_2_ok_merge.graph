@@ -1,0 +1,16 @@
+// PROGRAMA VÁLIDO: merge de dois grafos sem nós em comum, com pontes entre eles.
+
+Graph G1 {
+    Node = {a, b}
+    Edge = a -> b : 3
+}
+
+Graph G2 {
+    Node = {c, d}          // (ok) nenhum nome repetido em relação a G1
+    Edge = c -- d
+}
+
+// (ok) cada ponte liga um nó de G1 a um nó de G2 (ou o contrário), e os nós existem
+Graph G3 = G1.merge(G2, G1.b -> G2.c : 10, G2.d -> G1.a)
+
+G3.short_dist(a, d)        // (ok) G3 tem os nós dos dois grafos: a (de G1) e d (de G2)
