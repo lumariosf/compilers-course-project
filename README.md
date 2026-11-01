@@ -16,6 +16,7 @@ Para criar o código do Parser de GRAPH, utilizamos o parser generator [Larlpop]
     │   ├── checker.rs
     │   ├── grammar.lalrpop
     |   ├── grammar.rs
+    │   ├── interpreter.rs
     │   ├── lexer.rs
     │   ├── main.rs
     │   └── types.rs
@@ -287,3 +288,29 @@ Qualquer outro identificador além da variável do `for` é erro (para comparar 
 | Nós sem caminho no `short_dist` | continua sendo erro de execução, não de compilação | conforme a seção 7 |
 
 > **Pendente de atualização nas seções anteriores:** a seção 5 ainda não cita `Option<T>` na lista de tipos de campo; a seção 6 descreve o tipo da aresta como `edge type`, que no `filter` é `e.type`; e a seção 7 ainda não mostra o acesso a atributos de nós (`e.origin.idade`). Essas seções serão revisadas depois.
+
+### 9. Interpretador e Execução
+
+Após a verificação semântica, o programa é executado pelo interpretador (`src/interpreter.rs`).
+
+- **Declarações e merge:** instanciam grafos em tempo de execução, preservando nós, tipos e arestas.
+- **`short_dist`:** calcula a distância mínima usando o algoritmo de Dijkstra. Se os nós não forem conectados, gera erro de execução com linha e coluna.
+- **`filter`:** avalia a condição para cada aresta e retorna as arestas que atendem ao predicado.
+- **Encadeamento:** chamadas encadeadas (ex: `G.filter(...).short_dist(...)`) operam sequencialmente sobre o grafo filtrado anterior.
+
+#### Exemplos do Interpretador
+
+| Arquivo | Descrição e resultado esperado |
+|---------|--------------------------------|
+| `interpretador_1_dijkstra.graph` | `short_dist` em grafos direcionados e bidirecionais (`--`), caminho ótimo ponderado e auto-laço |
+| `interpretador_2_filter_atributos.graph` | `filter` com atributos de nós (`idade`, `ativo`), campos `Option` ausentes e tipo de aresta (`e.type`) |
+| `interpretador_3_merge_e_encadeamento.graph` | `GrafoMerge` com pontes ponderadas e encadeamento (`filter` -> `short_dist` e `filter` -> `filter`) |
+| `interpretador_4_erro_desconectado.graph` | erro de execução quando nós não estão conectados no `short_dist` |
+
+Para rodar todos os exemplos do interpretador:
+
+```bash
+for f in examples/interpretador_*.graph; do echo "== $f"; cargo run -q -- "$f"; done
+```
+
+

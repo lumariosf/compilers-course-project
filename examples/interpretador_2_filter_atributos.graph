@@ -1,0 +1,33 @@
+// Exemplo 2: Teste de filtragem avançada (filter) com atributos e tipos
+// Testa acesso a atributos (e.origin.campo, e.destination.campo),
+// campos opcionais (Option<Bool>), tipo de aresta (e.type),
+// comparações com string e operadores lógicos (and, or, not).
+
+Graph RedeSocial {
+    NodeType Usuario { nome: String, idade: Number, ativo: Bool, vip: Option<Bool> }
+
+    Node = alice : Usuario { nome: "Alice", idade: 28, ativo: True, vip: True }
+    Node = bob   : Usuario { nome: "Bob", idade: 22, ativo: True }
+    Node = carol : Usuario { nome: "Carol", idade: 35, ativo: False, vip: False }
+    Node = david : Usuario { nome: "David", idade: 19, ativo: True, vip: True }
+
+    Edge = {
+        alice -> bob : 5,
+        bob -> carol : 3,
+        carol -- david : 2,
+        alice -> david : 8,
+        david -> alice : 1
+    }
+}
+
+// 1. Filtrar arestas onde a origem tem idade > 25 e o destino está ativo
+RedeSocial.filter(for e in RedeSocial | e.origin.idade > 25 and e.destination.ativo == True)
+
+// 2. Filtrar arestas com peso entre 2 e 6, excluindo destino "carol"
+RedeSocial.filter(for e in RedeSocial | e.weight >= 2 and e.weight <= 6 and not e.destination == "carol")
+
+// 3. Filtrar arestas cujo destino é VIP (True) - testa campo Option<Bool> com valor ausente
+RedeSocial.filter(for e in RedeSocial | e.destination.vip == True)
+
+// 4. Filtrar arestas bidirecionais (tipo "--")
+RedeSocial.filter(for e in RedeSocial | e.type == "--")

@@ -1,0 +1,39 @@
+// Exemplo 3: Teste de merge de grafos e encadeamento de consultas
+// Testa criação de novo grafo a partir de dois com pontes (GrafoMerge),
+// cálculo de menor caminho passando por pontes,
+// e encadeamento de chamadas:
+// - filter seguido de short_dist
+// - múltiplos filters encadeados
+
+Graph ClusterA {
+    Node = {a1, a2}
+    Edge = {
+        a1 -> a2 : 2
+    }
+}
+
+Graph ClusterB {
+    Node = {b1, b2}
+    Edge = {
+        b1 -> b2 : 3
+    }
+}
+
+// Merge com duas pontes: uma direta e cara (20), outra intermediária mais barata (6)
+Graph RedeIntegrada = ClusterA.merge(
+    ClusterB,
+    ClusterA.a1 -> ClusterB.b2 : 20,
+    ClusterA.a2 -> ClusterB.b1 : 6
+)
+
+// 1. Menor caminho no grafo unificado: a1 -> a2 (2) -> b1 (6) -> b2 (3) = 11
+RedeIntegrada.short_dist(a1, b2)
+
+// 2. Consulta encadeada (filter -> short_dist):
+// Filtra arestas com peso < 10 (remove a ponte de peso 20)
+// e calcula o menor caminho sobre o grafo resultante (continua 11)
+RedeIntegrada.filter(for e in RedeIntegrada | e.weight < 10).short_dist(a1, b2)
+
+// 3. Múltiplos filtros encadeados (filter -> filter):
+// Primeiro retém arestas com peso < 15, em seguida retém as que têm peso > 2
+RedeIntegrada.filter(for e in RedeIntegrada | e.weight < 15).filter(for e in RedeIntegrada | e.weight > 2)

@@ -1,0 +1,26 @@
+// Exemplo 1: Teste de cálculo de caminho mais curto (Dijkstra)
+// Testa arestas direcionadas, bidirecionais (--), pesos explícitos,
+// laços (self-loop) e caminhos onde mais saltos tem menor custo total.
+
+Graph Logistica {
+    Node = {origem, hubA, hubB, destino}
+
+    // Aresta direta cara: 50
+    // Caminho alternativo via hubs: origem -> hubA (10) -- hubB (5) -> destino (15) = total 30
+    Edge = {
+        origem -> destino : 50,
+        origem -> hubA : 10,
+        hubA -- hubB : 5,
+        hubB -> destino : 15,
+        origem -> origem : 1
+    }
+}
+
+// 1. Menor caminho entre origem e destino: deve escolher o caminho pelos hubs (10 + 5 + 15 = 30)
+Logistica.short_dist(origem, destino)
+
+// 2. Menor caminho reverso entre hubB e hubA usando aresta bidirecional `--` (custo: 5)
+Logistica.short_dist(hubB, hubA)
+
+// 3. Menor caminho de um nó para ele mesmo (custo: 0)
+Logistica.short_dist(origem, origem)

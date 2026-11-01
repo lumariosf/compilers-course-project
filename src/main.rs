@@ -1,5 +1,6 @@
 mod ast;
 mod checker;
+mod interpreter;
 mod lexer;
 mod types;
 use lalrpop_util::lalrpop_mod;
@@ -30,7 +31,24 @@ fn main() {
 
     match parser.parse(lexer::Lexer::new(&entrada)) {
         Ok(programa) => match checker::checar(&programa) {
-            Ok(()) => println!("{:#?}", programa),
+            Ok(()) => {
+                for aviso in interpreter::avisos(&programa) {
+                    let (linha, coluna) = types::linha_coluna(&entrada, aviso.span.start);
+                    eprintln!("{}:{}:{}: aviso: {}", caminho, linha, coluna, aviso.msg);
+                }
+                let mut interp = interpreter::Interpretador::new();
+                for item in &programa {
+                    match interp.executar_item(item) {
+                        Ok(Some(res)) => println!("{}", res),
+                        Ok(None) => {}
+                        Err(e) => {
+                            let (linha, coluna) = types::linha_coluna(&entrada, e.span.start);
+                            eprintln!("{}:{}:{}: erro de execução: {}", caminho, linha, coluna, e.msg);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+            }
             Err(erros) => {
                 for e in &erros {
                     let (linha, coluna) = types::linha_coluna(&entrada, e.span.start);
@@ -42,6 +60,7 @@ fn main() {
         },
         Err(e) => {
             eprintln!("Erro de parsing: {:?}", e);
+            std::process::exit(1);
         }
     }
 }
