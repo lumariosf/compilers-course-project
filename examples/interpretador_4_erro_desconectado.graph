@@ -1,0 +1,21 @@
+// Exemplo 4: Teste de erro de execução em tempo de interpretação
+// O programa é sintaticamente e semanticamente válido: o grafo e todos os nós existem.
+// Porém, na execução da consulta `short_dist(ilha2, ilha1)`, não há caminho
+// que conecte os nós (aresta unidirecional sem retorno e ilha3 isolada).
+//
+// Conforme a documentação:
+// "Se os nós não forem conectados, a consulta gera um erro de execução"
+
+Graph Arquipelago {
+    Node = {ilha1, ilha2, ilha3}
+
+    Edge = {
+        ilha1 -> ilha2 : 10
+    }
+}
+
+// 1. Caminho de ida existe: ilha1 -> ilha2 (custo: 10)
+Arquipelago.short_dist(ilha1, ilha2)
+
+// 2. Erro de execução: não há caminho reverso de ilha2 para ilha1
+Arquipelago.short_dist(ilha2, ilha1)
