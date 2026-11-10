@@ -1,0 +1,3 @@
+Graph Left {}
+Graph Right {}
+Left.merge(Right)

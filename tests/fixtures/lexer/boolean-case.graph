@@ -1,0 +1,4 @@
+Graph BooleanCase {
+    NodeType Flags { upper: Bool, lower: Bool }
+    Node = flags : Flags { upper: True, lower: true }
+}

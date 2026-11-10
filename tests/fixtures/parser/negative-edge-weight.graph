@@ -1,0 +1,4 @@
+Graph NegativeWeight {
+    Node = {a, b}
+    Edge = a -> b : -1
+}

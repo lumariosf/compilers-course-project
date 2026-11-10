@@ -1,0 +1,17 @@
+# Typed nodes, generic field annotations, literals, signed expressions and both edge kinds parse.
+$ cargo run --quiet -- tests/fixtures/integration/features/graph-features.graph | sed -E 's/^[[:space:]]*//' | grep -E '^(NodeTipado\(|tipo: Generico \{|kind: (Unario|Numero|Texto|Bool)\(|tipo: (Direcionada|NaoDirecionada),|peso: Some\()'
+tipo: Generico {
+NodeTipado(
+kind: Texto(
+kind: Unario(
+kind: Numero(
+kind: Bool(
+NodeTipado(
+kind: Texto(
+kind: Numero(
+kind: Bool(
+tipo: Direcionada,
+peso: Some(
+tipo: NaoDirecionada,
+>2
+>= 0

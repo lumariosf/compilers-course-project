@@ -1,0 +1,2 @@
+Graph G {}
+G.filter(for e in G | e.weight > 1 || e.weight < 10)

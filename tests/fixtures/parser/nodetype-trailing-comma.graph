@@ -1,0 +1,3 @@
+Graph TrailingComma {
+    NodeType Person { name: String, }
+}

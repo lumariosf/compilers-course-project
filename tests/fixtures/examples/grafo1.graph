@@ -1,0 +1,12 @@
+Graph G {
+    Node = {a, b, c, d}
+    Edge = {
+        a -> b,
+        b -> c,
+        c -> d
+    }
+
+    Node = e
+    Edge = a -> e : 10
+}
+G.short_dist(a, d)

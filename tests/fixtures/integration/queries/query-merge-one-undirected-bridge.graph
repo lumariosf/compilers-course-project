@@ -1,0 +1,3 @@
+Graph Left { Node = a }
+Graph Right { Node = b }
+Left.merge(Right, Left.a -- Right.b)

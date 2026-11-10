@@ -1,0 +1,17 @@
+# Selected AST values pin node names, string/number/bool attributes, edge type, and the exact edge weight.
+$ cargo run --quiet -- tests/fixtures/integration/features/ast-values.graph | sed -E 's/^[[:space:]]*//' | grep -E 'name: "(ValueCheck|Ana_31|Ben2)"|^"(Ana|Ben)"[,]?$|^(31\.0|22\.0|true|false|2\.5),$|^tipo: Direcionada,'
+name: "ValueCheck",
+name: "Ana_31",
+"Ana",
+31.0,
+true,
+name: "Ben2",
+"Ben",
+22.0,
+false,
+name: "Ana_31",
+name: "Ben2",
+tipo: Direcionada,
+2.5,
+>2
+>= 0

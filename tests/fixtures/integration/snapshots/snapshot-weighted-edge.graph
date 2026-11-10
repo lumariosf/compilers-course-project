@@ -1,0 +1,4 @@
+Graph Weight {
+    Node = {x, y}
+    Edge = x -> y : 2.5
+}

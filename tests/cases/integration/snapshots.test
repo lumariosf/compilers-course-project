@@ -1,0 +1,229 @@
+# Snapshots cover small inputs with the complete AST; grep-based tests cover larger examples selectively.
+# Complete AST snapshot for a graph with two nodes and one directed edge.
+$ cargo run --quiet -- tests/fixtures/integration/snapshots/snapshot-two-nodes.graph
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Tiny",
+                span: Span {
+                    start: 6,
+                    end: 10,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "a",
+                        span: Span {
+                            start: 25,
+                            end: 26,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "b",
+                        span: Span {
+                            start: 28,
+                            end: 29,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 42,
+                                end: 43,
+                            },
+                        },
+                        destino: Ident {
+                            name: "b",
+                            span: Span {
+                                start: 47,
+                                end: 48,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 42,
+                            end: 48,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 50,
+            },
+        },
+    ),
+]
+>2
+>= 0
+
+# Complete AST snapshot for a weighted directed edge.
+$ cargo run --quiet -- tests/fixtures/integration/snapshots/snapshot-weighted-edge.graph
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Weight",
+                span: Span {
+                    start: 6,
+                    end: 12,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "x",
+                        span: Span {
+                            start: 27,
+                            end: 28,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "y",
+                        span: Span {
+                            start: 30,
+                            end: 31,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "x",
+                            span: Span {
+                                start: 44,
+                                end: 45,
+                            },
+                        },
+                        destino: Ident {
+                            name: "y",
+                            span: Span {
+                                start: 49,
+                                end: 50,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            2.5,
+                        ),
+                        span: Span {
+                            start: 44,
+                            end: 56,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 58,
+            },
+        },
+    ),
+]
+>2
+>= 0
+
+# Complete AST snapshot for a graph followed by a short_dist query.
+$ cargo run --quiet -- tests/fixtures/integration/snapshots/snapshot-short-dist.graph
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Path",
+                span: Span {
+                    start: 6,
+                    end: 10,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "start",
+                        span: Span {
+                            start: 25,
+                            end: 30,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "finish",
+                        span: Span {
+                            start: 32,
+                            end: 38,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "start",
+                            span: Span {
+                                start: 51,
+                                end: 56,
+                            },
+                        },
+                        destino: Ident {
+                            name: "finish",
+                            span: Span {
+                                start: 60,
+                                end: 66,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 51,
+                            end: 66,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 68,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Path",
+                span: Span {
+                    start: 69,
+                    end: 73,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "start",
+                        span: Span {
+                            start: 85,
+                            end: 90,
+                        },
+                    },
+                    destino: Ident {
+                        name: "finish",
+                        span: Span {
+                            start: 92,
+                            end: 98,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+>2
+>= 0

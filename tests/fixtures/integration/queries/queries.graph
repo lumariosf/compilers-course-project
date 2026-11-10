@@ -1,0 +1,10 @@
+Graph G {
+    Node = {a, b}
+    Edge = a -> b
+}
+Graph H {
+    Node = {c}
+}
+G.short_dist(a, b)
+G.filter(for e in G | e.weight >= 5 and not e.destination == "X")
+G.merge(H)

@@ -1,0 +1,34 @@
+# A string literal without its closing quote is reported as an invalid token.
+$ cargo run --quiet -- tests/fixtures/lexer/string-unclosed-quote.graph
+>2 /.*Erro de parsing:.*Token inválido na posição.*/
+>= 0
+
+# True is a boolean literal, while lowercase true is parsed as an identifier.
+# NOTA: lowercase true is accepted as an identifier; there is no semantic type checker rejecting it for a Bool field.
+$ cargo run --quiet -- tests/fixtures/lexer/boolean-case.graph | grep -E 'kind: (Bool|Identificador)\(|^[[:space:]]+(true|"true"),'
+                                    kind: Bool(
+                                        true,
+                                    kind: Identificador(
+                                        "true",
+>2
+>= 0
+
+# A decimal literal cannot start with a dot in the current lexer/parser.
+$ cargo run --quiet -- tests/fixtures/lexer/number-leading-dot.graph
+>2 /.*Erro de parsing:.*/
+>= 0
+
+# A decimal literal cannot end with a dot in the current grammar.
+$ cargo run --quiet -- tests/fixtures/lexer/number-trailing-dot.graph
+>2 /.*Erro de parsing:.*/
+>= 0
+
+# Reserved keyword Graph cannot be used where an identifier is required.
+$ cargo run --quiet -- tests/fixtures/lexer/keyword-as-identifier.graph
+>2 /.*Erro de parsing:.*/
+>= 0
+
+# A digits-only name is tokenized as a number rather than an identifier.
+$ cargo run --quiet -- tests/fixtures/lexer/digits-only-identifier.graph
+>2 /.*Erro de parsing:.*/
+>= 0

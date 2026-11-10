@@ -1,0 +1,6 @@
+Graph ValueCheck {
+    NodeType Person { name: String, age: Number, active: Bool }
+    Node = Ana_31 : Person { name: "Ana", age: 31, active: True }
+    Node = Ben2 : Person { name: "Ben", age: 22, active: False }
+    Edge = Ana_31 -> Ben2 : 2.5
+}

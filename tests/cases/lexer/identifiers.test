@@ -1,0 +1,12 @@
+# Identifiers start with a letter and may contain digits and underscores after it.
+$ cargo run --quiet -- tests/fixtures/lexer/identifiers.graph | grep -E 'name: "(Sample_2|alpha_1|beta2)"'
+                name: "Sample_2",
+                        name: "alpha_1",
+                        name: "beta2",
+>2
+>= 0
+
+# An invalid character is reported on stderr; the current CLI exits successfully.
+$ cargo run --quiet -- tests/fixtures/lexer/invalid-token.graph
+>2 /.*Erro de parsing:.*Token inválido na posição.*/
+>= 0
