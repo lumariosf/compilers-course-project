@@ -825,6 +825,16 @@ pub fn calcular_short_dist(
             }
         }
     }
+    
+    if let Some(a) = grafo.arestas.iter().find(|a| a.peso < 0.0) {
+    return Err(ErroExecucao::new(
+        span,
+        format!(
+            "`short_dist` não aceita pesos negativos (aresta `{}` no grafo `{}`)",
+            a, grafo.nome
+        ),
+    ));
+}
 
     Err(ErroExecucao::new(
         span,
