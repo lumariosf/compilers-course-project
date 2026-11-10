@@ -1,0 +1,8 @@
+exit=1
+stdout:
+stderr:
+examples/semantica_3_erro_nos_e_arestas.graph:5:12: erro: nó `a` já declarado em `G`
+examples/semantica_3_erro_nos_e_arestas.graph:6:17: erro: nó `x` não declarado em `G` antes desta aresta
+examples/semantica_3_erro_nos_e_arestas.graph:7:17: erro: nó `c` não declarado em `G` antes desta aresta
+examples/semantica_3_erro_nos_e_arestas.graph:10:12: erro: aresta `b -> a` repete uma aresta já declarada em `G`
+4 erro(s) semântico(s)

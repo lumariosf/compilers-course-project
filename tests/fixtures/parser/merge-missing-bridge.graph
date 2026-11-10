@@ -1,0 +1,3 @@
+Graph A { Node = a }
+Graph B { Node = b }
+Graph C = A.merge(B)

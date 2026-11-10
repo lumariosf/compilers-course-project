@@ -1,0 +1,173 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "G1",
+                span: Span {
+                    start: 6,
+                    end: 8,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "a",
+                        span: Span {
+                            start: 29,
+                            end: 30,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "d",
+                        span: Span {
+                            start: 33,
+                            end: 34,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 55,
+                                end: 56,
+                            },
+                        },
+                        destino: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 58,
+                                end: 59,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 55,
+                            end: 59,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 61,
+                                end: 62,
+                            },
+                        },
+                        destino: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 64,
+                                end: 65,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 61,
+                            end: 65,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 69,
+            },
+        },
+    ),
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "G2",
+                span: Span {
+                    start: 76,
+                    end: 78,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "a",
+                        span: Span {
+                            start: 99,
+                            end: 100,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "d",
+                        span: Span {
+                            start: 103,
+                            end: 104,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 125,
+                                end: 126,
+                            },
+                        },
+                        destino: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 128,
+                                end: 129,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 125,
+                            end: 129,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 131,
+                                end: 132,
+                            },
+                        },
+                        destino: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 134,
+                                end: 135,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 131,
+                            end: 135,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 70,
+                end: 139,
+            },
+        },
+    ),
+]
+stderr:
+tests/fixtures/examples/grafo4.graph:1:7: aviso: grafo `G1` declarado mas não utilizado
+tests/fixtures/examples/grafo4.graph:5:7: aviso: grafo `G2` declarado mas não utilizado

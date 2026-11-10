@@ -1,0 +1,8 @@
+Graph G {
+    NodeType P { age: Number }
+    Node = a : P { age: 18 }
+    Node = b : P { age: 22 }
+    Edge = a -> b
+}
+G.filter(for edge in G | edge.source > 1)
+G.filter(for edge in G | edge.origin.unknown == 1)

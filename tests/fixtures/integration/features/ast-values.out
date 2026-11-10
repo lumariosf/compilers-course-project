@@ -1,0 +1,312 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "ValueCheck",
+                span: Span {
+                    start: 6,
+                    end: 16,
+                },
+            },
+            membros: [
+                Tipo(
+                    TipoDecl {
+                        nome: Ident {
+                            name: "Person",
+                            span: Span {
+                                start: 32,
+                                end: 38,
+                            },
+                        },
+                        campos: [
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "name",
+                                    span: Span {
+                                        start: 41,
+                                        end: 45,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "String",
+                                        span: Span {
+                                            start: 47,
+                                            end: 53,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 41,
+                                    end: 53,
+                                },
+                            },
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "age",
+                                    span: Span {
+                                        start: 55,
+                                        end: 58,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "Number",
+                                        span: Span {
+                                            start: 60,
+                                            end: 66,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 55,
+                                    end: 66,
+                                },
+                            },
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "active",
+                                    span: Span {
+                                        start: 68,
+                                        end: 74,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "Bool",
+                                        span: Span {
+                                            start: 76,
+                                            end: 80,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 68,
+                                    end: 80,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 23,
+                            end: 82,
+                        },
+                    },
+                ),
+                NodeTipado(
+                    NoTipado {
+                        nome: Ident {
+                            name: "Ana_31",
+                            span: Span {
+                                start: 94,
+                                end: 100,
+                            },
+                        },
+                        tipo: Ident {
+                            name: "Person",
+                            span: Span {
+                                start: 103,
+                                end: 109,
+                            },
+                        },
+                        atributos: [
+                            Atributo {
+                                nome: Ident {
+                                    name: "name",
+                                    span: Span {
+                                        start: 112,
+                                        end: 116,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Texto(
+                                        "Ana",
+                                    ),
+                                    span: Span {
+                                        start: 118,
+                                        end: 123,
+                                    },
+                                },
+                                span: Span {
+                                    start: 112,
+                                    end: 123,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "age",
+                                    span: Span {
+                                        start: 125,
+                                        end: 128,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Numero(
+                                        31.0,
+                                    ),
+                                    span: Span {
+                                        start: 130,
+                                        end: 132,
+                                    },
+                                },
+                                span: Span {
+                                    start: 125,
+                                    end: 132,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "active",
+                                    span: Span {
+                                        start: 134,
+                                        end: 140,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 142,
+                                        end: 146,
+                                    },
+                                },
+                                span: Span {
+                                    start: 134,
+                                    end: 146,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 94,
+                            end: 148,
+                        },
+                    },
+                ),
+                NodeTipado(
+                    NoTipado {
+                        nome: Ident {
+                            name: "Ben2",
+                            span: Span {
+                                start: 160,
+                                end: 164,
+                            },
+                        },
+                        tipo: Ident {
+                            name: "Person",
+                            span: Span {
+                                start: 167,
+                                end: 173,
+                            },
+                        },
+                        atributos: [
+                            Atributo {
+                                nome: Ident {
+                                    name: "name",
+                                    span: Span {
+                                        start: 176,
+                                        end: 180,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Texto(
+                                        "Ben",
+                                    ),
+                                    span: Span {
+                                        start: 182,
+                                        end: 187,
+                                    },
+                                },
+                                span: Span {
+                                    start: 176,
+                                    end: 187,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "age",
+                                    span: Span {
+                                        start: 189,
+                                        end: 192,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Numero(
+                                        22.0,
+                                    ),
+                                    span: Span {
+                                        start: 194,
+                                        end: 196,
+                                    },
+                                },
+                                span: Span {
+                                    start: 189,
+                                    end: 196,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "active",
+                                    span: Span {
+                                        start: 198,
+                                        end: 204,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        false,
+                                    ),
+                                    span: Span {
+                                        start: 206,
+                                        end: 211,
+                                    },
+                                },
+                                span: Span {
+                                    start: 198,
+                                    end: 211,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 160,
+                            end: 213,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "Ana_31",
+                            span: Span {
+                                start: 225,
+                                end: 231,
+                            },
+                        },
+                        destino: Ident {
+                            name: "Ben2",
+                            span: Span {
+                                start: 235,
+                                end: 239,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            2.5,
+                        ),
+                        span: Span {
+                            start: 225,
+                            end: 245,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 247,
+            },
+        },
+    ),
+]
+stderr:
+tests/fixtures/integration/features/ast-values.graph:1:7: aviso: grafo `ValueCheck` declarado mas não utilizado

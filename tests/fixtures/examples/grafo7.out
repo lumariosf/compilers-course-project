@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+Erro de parsing: UnrecognizedToken { token: (9, LParen, 10), expected: ["\"=\"", "\"{\""] }

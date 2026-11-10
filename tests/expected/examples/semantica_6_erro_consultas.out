@@ -1,0 +1,14 @@
+exit=1
+stdout:
+stderr:
+examples/semantica_6_erro_consultas.graph:11:19: erro: nó `zeca` não existe em `G`
+examples/semantica_6_erro_consultas.graph:12:1: erro: grafo `K` não declarado
+examples/semantica_6_erro_consultas.graph:13:19: erro: filter de `G` deve percorrer o próprio grafo: `for e in G`
+examples/semantica_6_erro_consultas.graph:14:23: erro: condição do filter deve ser Bool, encontrado Number
+examples/semantica_6_erro_consultas.graph:15:25: erro: aresta não tem o campo `peso` (campos: weight, origin, destination, type)
+examples/semantica_6_erro_consultas.graph:16:23: erro: não é possível comparar Number com String usando `==`
+examples/semantica_6_erro_consultas.graph:17:23: erro: variável `x` não declarada
+examples/semantica_6_erro_consultas.graph:18:35: erro: `ana` não é uma variável; para comparar com o nó use "ana"
+examples/semantica_6_erro_consultas.graph:19:33: erro: tipo de aresta inválido "=>" (esperado "->" ou "--")
+examples/semantica_6_erro_consultas.graph:20:32: erro: nó `ana` (`Pessoa`) não tem o campo `email`
+10 erro(s) semântico(s)

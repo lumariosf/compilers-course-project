@@ -1,0 +1,3 @@
+Graph G {
+    NodeType Bad { x: Number, x: Bool, y: Option, z: Option<Option<String>>, w: List<Number> }
+}

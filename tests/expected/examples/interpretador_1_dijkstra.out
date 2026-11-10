@@ -1,0 +1,278 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Logistica",
+                span: Span {
+                    start: 215,
+                    end: 224,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "origem",
+                        span: Span {
+                            start: 239,
+                            end: 245,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "hubA",
+                        span: Span {
+                            start: 247,
+                            end: 251,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "hubB",
+                        span: Span {
+                            start: 253,
+                            end: 257,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "destino",
+                        span: Span {
+                            start: 259,
+                            end: 266,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "origem",
+                            span: Span {
+                                start: 416,
+                                end: 422,
+                            },
+                        },
+                        destino: Ident {
+                            name: "destino",
+                            span: Span {
+                                start: 426,
+                                end: 433,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            50.0,
+                        ),
+                        span: Span {
+                            start: 416,
+                            end: 438,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "origem",
+                            span: Span {
+                                start: 448,
+                                end: 454,
+                            },
+                        },
+                        destino: Ident {
+                            name: "hubA",
+                            span: Span {
+                                start: 458,
+                                end: 462,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            10.0,
+                        ),
+                        span: Span {
+                            start: 448,
+                            end: 467,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "hubA",
+                            span: Span {
+                                start: 477,
+                                end: 481,
+                            },
+                        },
+                        destino: Ident {
+                            name: "hubB",
+                            span: Span {
+                                start: 485,
+                                end: 489,
+                            },
+                        },
+                        tipo: NaoDirecionada,
+                        peso: Some(
+                            5.0,
+                        ),
+                        span: Span {
+                            start: 477,
+                            end: 493,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "hubB",
+                            span: Span {
+                                start: 503,
+                                end: 507,
+                            },
+                        },
+                        destino: Ident {
+                            name: "destino",
+                            span: Span {
+                                start: 511,
+                                end: 518,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            15.0,
+                        ),
+                        span: Span {
+                            start: 503,
+                            end: 523,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "origem",
+                            span: Span {
+                                start: 533,
+                                end: 539,
+                            },
+                        },
+                        destino: Ident {
+                            name: "origem",
+                            span: Span {
+                                start: 543,
+                                end: 549,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            1.0,
+                        ),
+                        span: Span {
+                            start: 533,
+                            end: 553,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 209,
+                end: 561,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Logistica",
+                span: Span {
+                    start: 661,
+                    end: 670,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "origem",
+                        span: Span {
+                            start: 682,
+                            end: 688,
+                        },
+                    },
+                    destino: Ident {
+                        name: "destino",
+                        span: Span {
+                            start: 690,
+                            end: 697,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Logistica",
+                span: Span {
+                    start: 789,
+                    end: 798,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "hubB",
+                        span: Span {
+                            start: 810,
+                            end: 814,
+                        },
+                    },
+                    destino: Ident {
+                        name: "hubA",
+                        span: Span {
+                            start: 816,
+                            end: 820,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Logistica",
+                span: Span {
+                    start: 879,
+                    end: 888,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "origem",
+                        span: Span {
+                            start: 900,
+                            end: 906,
+                        },
+                    },
+                    destino: Ident {
+                        name: "origem",
+                        span: Span {
+                            start: 908,
+                            end: 914,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+30
+5
+0
+stderr:

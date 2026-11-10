@@ -32,6 +32,7 @@ fn main() {
     match parser.parse(lexer::Lexer::new(&entrada)) {
         Ok(programa) => match checker::checar(&programa) {
             Ok(()) => {
+                println!("{:#?}", programa);
                 for aviso in interpreter::avisos(&programa) {
                     let (linha, coluna) = types::linha_coluna(&entrada, aviso.span.start);
                     eprintln!("{}:{}:{}: aviso: {}", caminho, linha, coluna, aviso.msg);

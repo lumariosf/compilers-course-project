@@ -1,0 +1,1200 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "RedeSocial",
+                span: Span {
+                    start: 275,
+                    end: 285,
+                },
+            },
+            membros: [
+                Tipo(
+                    TipoDecl {
+                        nome: Ident {
+                            name: "Usuario",
+                            span: Span {
+                                start: 301,
+                                end: 308,
+                            },
+                        },
+                        campos: [
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "nome",
+                                    span: Span {
+                                        start: 311,
+                                        end: 315,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "String",
+                                        span: Span {
+                                            start: 317,
+                                            end: 323,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 311,
+                                    end: 323,
+                                },
+                            },
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "idade",
+                                    span: Span {
+                                        start: 325,
+                                        end: 330,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "Number",
+                                        span: Span {
+                                            start: 332,
+                                            end: 338,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 325,
+                                    end: 338,
+                                },
+                            },
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "ativo",
+                                    span: Span {
+                                        start: 340,
+                                        end: 345,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "Bool",
+                                        span: Span {
+                                            start: 347,
+                                            end: 351,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 340,
+                                    end: 351,
+                                },
+                            },
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "vip",
+                                    span: Span {
+                                        start: 353,
+                                        end: 356,
+                                    },
+                                },
+                                tipo: Generico {
+                                    nome: Ident {
+                                        name: "Option",
+                                        span: Span {
+                                            start: 358,
+                                            end: 364,
+                                        },
+                                    },
+                                    arg: Nome(
+                                        Ident {
+                                            name: "Bool",
+                                            span: Span {
+                                                start: 365,
+                                                end: 369,
+                                            },
+                                        },
+                                    ),
+                                },
+                                span: Span {
+                                    start: 353,
+                                    end: 370,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 292,
+                            end: 372,
+                        },
+                    },
+                ),
+                NodeTipado(
+                    NoTipado {
+                        nome: Ident {
+                            name: "alice",
+                            span: Span {
+                                start: 385,
+                                end: 390,
+                            },
+                        },
+                        tipo: Ident {
+                            name: "Usuario",
+                            span: Span {
+                                start: 393,
+                                end: 400,
+                            },
+                        },
+                        atributos: [
+                            Atributo {
+                                nome: Ident {
+                                    name: "nome",
+                                    span: Span {
+                                        start: 403,
+                                        end: 407,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Texto(
+                                        "Alice",
+                                    ),
+                                    span: Span {
+                                        start: 409,
+                                        end: 416,
+                                    },
+                                },
+                                span: Span {
+                                    start: 403,
+                                    end: 416,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "idade",
+                                    span: Span {
+                                        start: 418,
+                                        end: 423,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Numero(
+                                        28.0,
+                                    ),
+                                    span: Span {
+                                        start: 425,
+                                        end: 427,
+                                    },
+                                },
+                                span: Span {
+                                    start: 418,
+                                    end: 427,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "ativo",
+                                    span: Span {
+                                        start: 429,
+                                        end: 434,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 436,
+                                        end: 440,
+                                    },
+                                },
+                                span: Span {
+                                    start: 429,
+                                    end: 440,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "vip",
+                                    span: Span {
+                                        start: 442,
+                                        end: 445,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 447,
+                                        end: 451,
+                                    },
+                                },
+                                span: Span {
+                                    start: 442,
+                                    end: 451,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 385,
+                            end: 453,
+                        },
+                    },
+                ),
+                NodeTipado(
+                    NoTipado {
+                        nome: Ident {
+                            name: "bob",
+                            span: Span {
+                                start: 465,
+                                end: 468,
+                            },
+                        },
+                        tipo: Ident {
+                            name: "Usuario",
+                            span: Span {
+                                start: 473,
+                                end: 480,
+                            },
+                        },
+                        atributos: [
+                            Atributo {
+                                nome: Ident {
+                                    name: "nome",
+                                    span: Span {
+                                        start: 483,
+                                        end: 487,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Texto(
+                                        "Bob",
+                                    ),
+                                    span: Span {
+                                        start: 489,
+                                        end: 494,
+                                    },
+                                },
+                                span: Span {
+                                    start: 483,
+                                    end: 494,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "idade",
+                                    span: Span {
+                                        start: 496,
+                                        end: 501,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Numero(
+                                        22.0,
+                                    ),
+                                    span: Span {
+                                        start: 503,
+                                        end: 505,
+                                    },
+                                },
+                                span: Span {
+                                    start: 496,
+                                    end: 505,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "ativo",
+                                    span: Span {
+                                        start: 507,
+                                        end: 512,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 514,
+                                        end: 518,
+                                    },
+                                },
+                                span: Span {
+                                    start: 507,
+                                    end: 518,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 465,
+                            end: 520,
+                        },
+                    },
+                ),
+                NodeTipado(
+                    NoTipado {
+                        nome: Ident {
+                            name: "carol",
+                            span: Span {
+                                start: 532,
+                                end: 537,
+                            },
+                        },
+                        tipo: Ident {
+                            name: "Usuario",
+                            span: Span {
+                                start: 540,
+                                end: 547,
+                            },
+                        },
+                        atributos: [
+                            Atributo {
+                                nome: Ident {
+                                    name: "nome",
+                                    span: Span {
+                                        start: 550,
+                                        end: 554,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Texto(
+                                        "Carol",
+                                    ),
+                                    span: Span {
+                                        start: 556,
+                                        end: 563,
+                                    },
+                                },
+                                span: Span {
+                                    start: 550,
+                                    end: 563,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "idade",
+                                    span: Span {
+                                        start: 565,
+                                        end: 570,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Numero(
+                                        35.0,
+                                    ),
+                                    span: Span {
+                                        start: 572,
+                                        end: 574,
+                                    },
+                                },
+                                span: Span {
+                                    start: 565,
+                                    end: 574,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "ativo",
+                                    span: Span {
+                                        start: 576,
+                                        end: 581,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        false,
+                                    ),
+                                    span: Span {
+                                        start: 583,
+                                        end: 588,
+                                    },
+                                },
+                                span: Span {
+                                    start: 576,
+                                    end: 588,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "vip",
+                                    span: Span {
+                                        start: 590,
+                                        end: 593,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        false,
+                                    ),
+                                    span: Span {
+                                        start: 595,
+                                        end: 600,
+                                    },
+                                },
+                                span: Span {
+                                    start: 590,
+                                    end: 600,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 532,
+                            end: 602,
+                        },
+                    },
+                ),
+                NodeTipado(
+                    NoTipado {
+                        nome: Ident {
+                            name: "david",
+                            span: Span {
+                                start: 614,
+                                end: 619,
+                            },
+                        },
+                        tipo: Ident {
+                            name: "Usuario",
+                            span: Span {
+                                start: 622,
+                                end: 629,
+                            },
+                        },
+                        atributos: [
+                            Atributo {
+                                nome: Ident {
+                                    name: "nome",
+                                    span: Span {
+                                        start: 632,
+                                        end: 636,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Texto(
+                                        "David",
+                                    ),
+                                    span: Span {
+                                        start: 638,
+                                        end: 645,
+                                    },
+                                },
+                                span: Span {
+                                    start: 632,
+                                    end: 645,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "idade",
+                                    span: Span {
+                                        start: 647,
+                                        end: 652,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Numero(
+                                        19.0,
+                                    ),
+                                    span: Span {
+                                        start: 654,
+                                        end: 656,
+                                    },
+                                },
+                                span: Span {
+                                    start: 647,
+                                    end: 656,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "ativo",
+                                    span: Span {
+                                        start: 658,
+                                        end: 663,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 665,
+                                        end: 669,
+                                    },
+                                },
+                                span: Span {
+                                    start: 658,
+                                    end: 669,
+                                },
+                            },
+                            Atributo {
+                                nome: Ident {
+                                    name: "vip",
+                                    span: Span {
+                                        start: 671,
+                                        end: 674,
+                                    },
+                                },
+                                valor: Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 676,
+                                        end: 680,
+                                    },
+                                },
+                                span: Span {
+                                    start: 671,
+                                    end: 680,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 614,
+                            end: 682,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "alice",
+                            span: Span {
+                                start: 705,
+                                end: 710,
+                            },
+                        },
+                        destino: Ident {
+                            name: "bob",
+                            span: Span {
+                                start: 714,
+                                end: 717,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            5.0,
+                        ),
+                        span: Span {
+                            start: 705,
+                            end: 721,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "bob",
+                            span: Span {
+                                start: 731,
+                                end: 734,
+                            },
+                        },
+                        destino: Ident {
+                            name: "carol",
+                            span: Span {
+                                start: 738,
+                                end: 743,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            3.0,
+                        ),
+                        span: Span {
+                            start: 731,
+                            end: 747,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "carol",
+                            span: Span {
+                                start: 757,
+                                end: 762,
+                            },
+                        },
+                        destino: Ident {
+                            name: "david",
+                            span: Span {
+                                start: 766,
+                                end: 771,
+                            },
+                        },
+                        tipo: NaoDirecionada,
+                        peso: Some(
+                            2.0,
+                        ),
+                        span: Span {
+                            start: 757,
+                            end: 775,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "alice",
+                            span: Span {
+                                start: 785,
+                                end: 790,
+                            },
+                        },
+                        destino: Ident {
+                            name: "david",
+                            span: Span {
+                                start: 794,
+                                end: 799,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            8.0,
+                        ),
+                        span: Span {
+                            start: 785,
+                            end: 803,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "david",
+                            span: Span {
+                                start: 813,
+                                end: 818,
+                            },
+                        },
+                        destino: Ident {
+                            name: "alice",
+                            span: Span {
+                                start: 822,
+                                end: 827,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            1.0,
+                        ),
+                        span: Span {
+                            start: 813,
+                            end: 831,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 269,
+                end: 839,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "RedeSocial",
+                span: Span {
+                    start: 916,
+                    end: 926,
+                },
+            },
+            chamadas: [
+                Filter {
+                    filtro: Filtro {
+                        variavel: Ident {
+                            name: "e",
+                            span: Span {
+                                start: 938,
+                                end: 939,
+                            },
+                        },
+                        fonte: Ident {
+                            name: "RedeSocial",
+                            span: Span {
+                                start: 943,
+                                end: 953,
+                            },
+                        },
+                        condicao: Expr {
+                            kind: Binario(
+                                Expr {
+                                    kind: Binario(
+                                        Expr {
+                                            kind: Acesso(
+                                                Expr {
+                                                    kind: Acesso(
+                                                        Expr {
+                                                            kind: Identificador(
+                                                                "e",
+                                                            ),
+                                                            span: Span {
+                                                                start: 956,
+                                                                end: 957,
+                                                            },
+                                                        },
+                                                        Ident {
+                                                            name: "origin",
+                                                            span: Span {
+                                                                start: 958,
+                                                                end: 964,
+                                                            },
+                                                        },
+                                                    ),
+                                                    span: Span {
+                                                        start: 956,
+                                                        end: 964,
+                                                    },
+                                                },
+                                                Ident {
+                                                    name: "idade",
+                                                    span: Span {
+                                                        start: 965,
+                                                        end: 970,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 956,
+                                                end: 970,
+                                            },
+                                        },
+                                        Gt,
+                                        Expr {
+                                            kind: Numero(
+                                                25.0,
+                                            ),
+                                            span: Span {
+                                                start: 973,
+                                                end: 975,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 956,
+                                        end: 975,
+                                    },
+                                },
+                                And,
+                                Expr {
+                                    kind: Binario(
+                                        Expr {
+                                            kind: Acesso(
+                                                Expr {
+                                                    kind: Acesso(
+                                                        Expr {
+                                                            kind: Identificador(
+                                                                "e",
+                                                            ),
+                                                            span: Span {
+                                                                start: 980,
+                                                                end: 981,
+                                                            },
+                                                        },
+                                                        Ident {
+                                                            name: "destination",
+                                                            span: Span {
+                                                                start: 982,
+                                                                end: 993,
+                                                            },
+                                                        },
+                                                    ),
+                                                    span: Span {
+                                                        start: 980,
+                                                        end: 993,
+                                                    },
+                                                },
+                                                Ident {
+                                                    name: "ativo",
+                                                    span: Span {
+                                                        start: 994,
+                                                        end: 999,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 980,
+                                                end: 999,
+                                            },
+                                        },
+                                        Eq,
+                                        Expr {
+                                            kind: Bool(
+                                                true,
+                                            ),
+                                            span: Span {
+                                                start: 1003,
+                                                end: 1007,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 980,
+                                        end: 1007,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 956,
+                                end: 1007,
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "RedeSocial",
+                span: Span {
+                    start: 1080,
+                    end: 1090,
+                },
+            },
+            chamadas: [
+                Filter {
+                    filtro: Filtro {
+                        variavel: Ident {
+                            name: "e",
+                            span: Span {
+                                start: 1102,
+                                end: 1103,
+                            },
+                        },
+                        fonte: Ident {
+                            name: "RedeSocial",
+                            span: Span {
+                                start: 1107,
+                                end: 1117,
+                            },
+                        },
+                        condicao: Expr {
+                            kind: Binario(
+                                Expr {
+                                    kind: Binario(
+                                        Expr {
+                                            kind: Binario(
+                                                Expr {
+                                                    kind: Acesso(
+                                                        Expr {
+                                                            kind: Identificador(
+                                                                "e",
+                                                            ),
+                                                            span: Span {
+                                                                start: 1120,
+                                                                end: 1121,
+                                                            },
+                                                        },
+                                                        Ident {
+                                                            name: "weight",
+                                                            span: Span {
+                                                                start: 1122,
+                                                                end: 1128,
+                                                            },
+                                                        },
+                                                    ),
+                                                    span: Span {
+                                                        start: 1120,
+                                                        end: 1128,
+                                                    },
+                                                },
+                                                Gte,
+                                                Expr {
+                                                    kind: Numero(
+                                                        2.0,
+                                                    ),
+                                                    span: Span {
+                                                        start: 1132,
+                                                        end: 1133,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 1120,
+                                                end: 1133,
+                                            },
+                                        },
+                                        And,
+                                        Expr {
+                                            kind: Binario(
+                                                Expr {
+                                                    kind: Acesso(
+                                                        Expr {
+                                                            kind: Identificador(
+                                                                "e",
+                                                            ),
+                                                            span: Span {
+                                                                start: 1138,
+                                                                end: 1139,
+                                                            },
+                                                        },
+                                                        Ident {
+                                                            name: "weight",
+                                                            span: Span {
+                                                                start: 1140,
+                                                                end: 1146,
+                                                            },
+                                                        },
+                                                    ),
+                                                    span: Span {
+                                                        start: 1138,
+                                                        end: 1146,
+                                                    },
+                                                },
+                                                Lte,
+                                                Expr {
+                                                    kind: Numero(
+                                                        6.0,
+                                                    ),
+                                                    span: Span {
+                                                        start: 1150,
+                                                        end: 1151,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 1138,
+                                                end: 1151,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 1120,
+                                        end: 1151,
+                                    },
+                                },
+                                And,
+                                Expr {
+                                    kind: Unario(
+                                        Not,
+                                        Expr {
+                                            kind: Binario(
+                                                Expr {
+                                                    kind: Acesso(
+                                                        Expr {
+                                                            kind: Identificador(
+                                                                "e",
+                                                            ),
+                                                            span: Span {
+                                                                start: 1160,
+                                                                end: 1161,
+                                                            },
+                                                        },
+                                                        Ident {
+                                                            name: "destination",
+                                                            span: Span {
+                                                                start: 1162,
+                                                                end: 1173,
+                                                            },
+                                                        },
+                                                    ),
+                                                    span: Span {
+                                                        start: 1160,
+                                                        end: 1173,
+                                                    },
+                                                },
+                                                Eq,
+                                                Expr {
+                                                    kind: Texto(
+                                                        "carol",
+                                                    ),
+                                                    span: Span {
+                                                        start: 1177,
+                                                        end: 1184,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 1160,
+                                                end: 1184,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 1156,
+                                        end: 1184,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 1120,
+                                end: 1184,
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "RedeSocial",
+                span: Span {
+                    start: 1281,
+                    end: 1291,
+                },
+            },
+            chamadas: [
+                Filter {
+                    filtro: Filtro {
+                        variavel: Ident {
+                            name: "e",
+                            span: Span {
+                                start: 1303,
+                                end: 1304,
+                            },
+                        },
+                        fonte: Ident {
+                            name: "RedeSocial",
+                            span: Span {
+                                start: 1308,
+                                end: 1318,
+                            },
+                        },
+                        condicao: Expr {
+                            kind: Binario(
+                                Expr {
+                                    kind: Acesso(
+                                        Expr {
+                                            kind: Acesso(
+                                                Expr {
+                                                    kind: Identificador(
+                                                        "e",
+                                                    ),
+                                                    span: Span {
+                                                        start: 1321,
+                                                        end: 1322,
+                                                    },
+                                                },
+                                                Ident {
+                                                    name: "destination",
+                                                    span: Span {
+                                                        start: 1323,
+                                                        end: 1334,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 1321,
+                                                end: 1334,
+                                            },
+                                        },
+                                        Ident {
+                                            name: "vip",
+                                            span: Span {
+                                                start: 1335,
+                                                end: 1338,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 1321,
+                                        end: 1338,
+                                    },
+                                },
+                                Eq,
+                                Expr {
+                                    kind: Bool(
+                                        true,
+                                    ),
+                                    span: Span {
+                                        start: 1342,
+                                        end: 1346,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 1321,
+                                end: 1346,
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "RedeSocial",
+                span: Span {
+                    start: 1397,
+                    end: 1407,
+                },
+            },
+            chamadas: [
+                Filter {
+                    filtro: Filtro {
+                        variavel: Ident {
+                            name: "e",
+                            span: Span {
+                                start: 1419,
+                                end: 1420,
+                            },
+                        },
+                        fonte: Ident {
+                            name: "RedeSocial",
+                            span: Span {
+                                start: 1424,
+                                end: 1434,
+                            },
+                        },
+                        condicao: Expr {
+                            kind: Binario(
+                                Expr {
+                                    kind: Acesso(
+                                        Expr {
+                                            kind: Identificador(
+                                                "e",
+                                            ),
+                                            span: Span {
+                                                start: 1437,
+                                                end: 1438,
+                                            },
+                                        },
+                                        Ident {
+                                            name: "type",
+                                            span: Span {
+                                                start: 1439,
+                                                end: 1443,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 1437,
+                                        end: 1443,
+                                    },
+                                },
+                                Eq,
+                                Expr {
+                                    kind: Texto(
+                                        "--",
+                                    ),
+                                    span: Span {
+                                        start: 1447,
+                                        end: 1451,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 1437,
+                                end: 1451,
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+alice -> bob : 5
+carol -- david : 2
+alice -> david : 8
+alice -> bob : 5
+carol -- david : 2
+carol -- david : 2
+alice -> david : 8
+david -> alice : 1
+carol -- david : 2
+stderr:

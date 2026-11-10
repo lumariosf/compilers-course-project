@@ -1,0 +1,6 @@
+Graph G {
+    Node = a
+    Node = a
+    NodeType P { x: Number }
+    NodeType P { y: Bool }
+}

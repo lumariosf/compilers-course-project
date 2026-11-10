@@ -1,0 +1,6 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/filter-field-errors.graph:7:31: erro: aresta não tem o campo `source` (campos: weight, origin, destination, type)
+tests/fixtures/semantic/filter-field-errors.graph:8:38: erro: nó `a` (`P`) não tem o campo `unknown`
+2 erro(s) semântico(s)

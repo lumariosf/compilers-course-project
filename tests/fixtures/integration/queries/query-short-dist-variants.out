@@ -1,0 +1,108 @@
+exit=1
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Route",
+                span: Span {
+                    start: 6,
+                    end: 11,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "north",
+                        span: Span {
+                            start: 26,
+                            end: 31,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "south",
+                        span: Span {
+                            start: 33,
+                            end: 38,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "east",
+                        span: Span {
+                            start: 40,
+                            end: 44,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 47,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Route",
+                span: Span {
+                    start: 48,
+                    end: 53,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "north",
+                        span: Span {
+                            start: 65,
+                            end: 70,
+                        },
+                    },
+                    destino: Ident {
+                        name: "east",
+                        span: Span {
+                            start: 72,
+                            end: 76,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Route",
+                span: Span {
+                    start: 78,
+                    end: 83,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "south",
+                        span: Span {
+                            start: 95,
+                            end: 100,
+                        },
+                    },
+                    destino: Ident {
+                        name: "north",
+                        span: Span {
+                            start: 102,
+                            end: 107,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+stderr:
+tests/fixtures/integration/queries/query-short-dist-variants.graph:4:1: erro de execução: nós `north` e `east` não estão conectados no grafo `Route`

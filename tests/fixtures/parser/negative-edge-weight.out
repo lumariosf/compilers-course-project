@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+Erro de parsing: UnrecognizedToken { token: (61, Minus, 62), expected: ["\"number\""] }

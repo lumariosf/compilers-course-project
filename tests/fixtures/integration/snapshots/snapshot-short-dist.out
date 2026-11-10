@@ -1,0 +1,94 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Path",
+                span: Span {
+                    start: 6,
+                    end: 10,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "start",
+                        span: Span {
+                            start: 25,
+                            end: 30,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "finish",
+                        span: Span {
+                            start: 32,
+                            end: 38,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "start",
+                            span: Span {
+                                start: 51,
+                                end: 56,
+                            },
+                        },
+                        destino: Ident {
+                            name: "finish",
+                            span: Span {
+                                start: 60,
+                                end: 66,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 51,
+                            end: 66,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 68,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Path",
+                span: Span {
+                    start: 69,
+                    end: 73,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "start",
+                        span: Span {
+                            start: 85,
+                            end: 90,
+                        },
+                    },
+                    destino: Ident {
+                        name: "finish",
+                        span: Span {
+                            start: 92,
+                            end: 98,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+1
+stderr:

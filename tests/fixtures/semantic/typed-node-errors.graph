@@ -1,0 +1,6 @@
+Graph G {
+    Node = early : Later { required: 1 }
+    Node = unknown : Missing {}
+    NodeType Later { required: Number, optional: Option<String> }
+    Node = bad : Later { required: 1, required: 2, extra: True }
+}

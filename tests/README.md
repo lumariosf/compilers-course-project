@@ -1,29 +1,7 @@
-# Testes
+# Suíte de testes
 
-Os casos usam ShellTestRunner (`shelltest`, formato 3). Execute os comandos a partir da raiz do repositório.
+O comando canônico é `make test`, documentado no README da raiz. Ele combina os testes unitários Rust com a comparação de todos os pares `.graph` + `.out` em `fixtures/` e dos exemplos originais em `examples/`.
 
-```text
-tests/
-├── README.md
-├── cases/{integration,lexer,parser}/*.test
-└── fixtures/
-    ├── examples/ (grafo1.graph ... grafo9.graph, test.graph)
-    ├── integration/{features,queries,snapshots}/*.graph
-    ├── lexer/*.graph
-    └── parser/*.graph
-```
+`run-golden.sh --bless` regenera snapshots executando o binário local. Revise cada saída gerada manualmente; a execução normal do runner é somente leitura e apresenta diffs para snapshots divergentes.
 
-`cases/` contém os `.test` com comandos e expectativas. `fixtures/` contém as entradas `.graph`, incluindo os exemplos antes mantidos na raiz.
-
-Todos os testes:
-```sh
-shelltest tests
-```
-Somente lexer:
-```sh
-shelltest tests/cases/lexer
-```
-Somente os casos dos exemplos:
-```sh
-shelltest tests/cases/integration/examples.test
-```
+Os arquivos `.test` legados em `cases/` mantêm expectativas de uma versão anterior da CLI e não são executados pelo comando canônico. Os snapshots `.out` cobrem a CLI atual, incluindo a AST impressa para programas semanticamente válidos.

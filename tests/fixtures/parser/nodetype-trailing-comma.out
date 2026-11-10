@@ -1,0 +1,62 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "TrailingComma",
+                span: Span {
+                    start: 6,
+                    end: 19,
+                },
+            },
+            membros: [
+                Tipo(
+                    TipoDecl {
+                        nome: Ident {
+                            name: "Person",
+                            span: Span {
+                                start: 35,
+                                end: 41,
+                            },
+                        },
+                        campos: [
+                            CampoDecl {
+                                nome: Ident {
+                                    name: "name",
+                                    span: Span {
+                                        start: 44,
+                                        end: 48,
+                                    },
+                                },
+                                tipo: Nome(
+                                    Ident {
+                                        name: "String",
+                                        span: Span {
+                                            start: 50,
+                                            end: 56,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 44,
+                                    end: 56,
+                                },
+                            },
+                        ],
+                        span: Span {
+                            start: 26,
+                            end: 59,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 61,
+            },
+        },
+    ),
+]
+stderr:
+tests/fixtures/parser/nodetype-trailing-comma.graph:1:7: aviso: grafo `TrailingComma` declarado mas não utilizado

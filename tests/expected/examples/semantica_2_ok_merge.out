@@ -1,0 +1,260 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "G1",
+                span: Span {
+                    start: 91,
+                    end: 93,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "a",
+                        span: Span {
+                            start: 108,
+                            end: 109,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "b",
+                        span: Span {
+                            start: 111,
+                            end: 112,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 125,
+                                end: 126,
+                            },
+                        },
+                        destino: Ident {
+                            name: "b",
+                            span: Span {
+                                start: 130,
+                                end: 131,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            3.0,
+                        ),
+                        span: Span {
+                            start: 125,
+                            end: 135,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 85,
+                end: 137,
+            },
+        },
+    ),
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "G2",
+                span: Span {
+                    start: 145,
+                    end: 147,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "c",
+                        span: Span {
+                            start: 162,
+                            end: 163,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "d",
+                        span: Span {
+                            start: 165,
+                            end: 166,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "c",
+                            span: Span {
+                                start: 235,
+                                end: 236,
+                            },
+                        },
+                        destino: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 240,
+                                end: 241,
+                            },
+                        },
+                        tipo: NaoDirecionada,
+                        peso: None,
+                        span: Span {
+                            start: 235,
+                            end: 241,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 139,
+                end: 243,
+            },
+        },
+    ),
+    GrafoMerge(
+        GrafoMerge {
+            nome: Ident {
+                name: "G3",
+                span: Span {
+                    start: 340,
+                    end: 342,
+                },
+            },
+            g1: Ident {
+                name: "G1",
+                span: Span {
+                    start: 345,
+                    end: 347,
+                },
+            },
+            g2: Ident {
+                name: "G2",
+                span: Span {
+                    start: 354,
+                    end: 356,
+                },
+            },
+            pontes: [
+                Ponte {
+                    g_origem: Ident {
+                        name: "G1",
+                        span: Span {
+                            start: 358,
+                            end: 360,
+                        },
+                    },
+                    no_origem: Ident {
+                        name: "b",
+                        span: Span {
+                            start: 361,
+                            end: 362,
+                        },
+                    },
+                    tipo: Direcionada,
+                    g_destino: Ident {
+                        name: "G2",
+                        span: Span {
+                            start: 366,
+                            end: 368,
+                        },
+                    },
+                    no_destino: Ident {
+                        name: "c",
+                        span: Span {
+                            start: 369,
+                            end: 370,
+                        },
+                    },
+                    peso: Some(
+                        10.0,
+                    ),
+                    span: Span {
+                        start: 358,
+                        end: 375,
+                    },
+                },
+                Ponte {
+                    g_origem: Ident {
+                        name: "G2",
+                        span: Span {
+                            start: 377,
+                            end: 379,
+                        },
+                    },
+                    no_origem: Ident {
+                        name: "d",
+                        span: Span {
+                            start: 380,
+                            end: 381,
+                        },
+                    },
+                    tipo: Direcionada,
+                    g_destino: Ident {
+                        name: "G1",
+                        span: Span {
+                            start: 385,
+                            end: 387,
+                        },
+                    },
+                    no_destino: Ident {
+                        name: "a",
+                        span: Span {
+                            start: 388,
+                            end: 389,
+                        },
+                    },
+                    peso: None,
+                    span: Span {
+                        start: 377,
+                        end: 389,
+                    },
+                },
+            ],
+            span: Span {
+                start: 334,
+                end: 390,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "G3",
+                span: Span {
+                    start: 392,
+                    end: 394,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "a",
+                        span: Span {
+                            start: 406,
+                            end: 407,
+                        },
+                    },
+                    destino: Ident {
+                        name: "d",
+                        span: Span {
+                            start: 409,
+                            end: 410,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+14
+stderr:

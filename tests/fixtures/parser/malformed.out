@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+Erro de parsing: UnrecognizedEof { location: 32, expected: ["\"Edge\"", "\"Node\"", "\"NodeType\"", "\"}\""] }

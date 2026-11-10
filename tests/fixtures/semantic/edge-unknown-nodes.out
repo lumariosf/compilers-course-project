@@ -1,0 +1,6 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/edge-unknown-nodes.graph:2:12: erro: nó `missing` não declarado em `G` antes desta aresta
+tests/fixtures/semantic/edge-unknown-nodes.graph:2:23: erro: nó `absent` não declarado em `G` antes desta aresta
+2 erro(s) semântico(s)

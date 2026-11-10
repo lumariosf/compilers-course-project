@@ -1,0 +1,8 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/typed-node-errors.graph:2:20: erro: NodeType `Later` usado antes de ser declarado
+tests/fixtures/semantic/typed-node-errors.graph:3:22: erro: NodeType `Missing` não declarado em `G`
+tests/fixtures/semantic/typed-node-errors.graph:5:39: erro: atributo `required` informado mais de uma vez
+tests/fixtures/semantic/typed-node-errors.graph:5:52: erro: `Later` não tem o campo `extra`
+4 erro(s) semântico(s)

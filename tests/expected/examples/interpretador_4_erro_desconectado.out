@@ -1,0 +1,136 @@
+exit=1
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Arquipelago",
+                span: Span {
+                    start: 435,
+                    end: 446,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "ilha1",
+                        span: Span {
+                            start: 461,
+                            end: 466,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "ilha2",
+                        span: Span {
+                            start: 468,
+                            end: 473,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "ilha3",
+                        span: Span {
+                            start: 475,
+                            end: 480,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "ilha1",
+                            span: Span {
+                                start: 504,
+                                end: 509,
+                            },
+                        },
+                        destino: Ident {
+                            name: "ilha2",
+                            span: Span {
+                                start: 513,
+                                end: 518,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            10.0,
+                        ),
+                        span: Span {
+                            start: 504,
+                            end: 523,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 429,
+                end: 531,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Arquipelago",
+                span: Span {
+                    start: 589,
+                    end: 600,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "ilha1",
+                        span: Span {
+                            start: 612,
+                            end: 617,
+                        },
+                    },
+                    destino: Ident {
+                        name: "ilha2",
+                        span: Span {
+                            start: 619,
+                            end: 624,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Arquipelago",
+                span: Span {
+                    start: 698,
+                    end: 709,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "ilha2",
+                        span: Span {
+                            start: 721,
+                            end: 726,
+                        },
+                    },
+                    destino: Ident {
+                        name: "ilha1",
+                        span: Span {
+                            start: 728,
+                            end: 733,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+10
+stderr:
+examples/interpretador_4_erro_desconectado.graph:10:27: aviso: nó `ilha3` no grafo `Arquipelago` declarado mas não utilizado
+examples/interpretador_4_erro_desconectado.graph:21:1: erro de execução: nós `ilha2` e `ilha1` não estão conectados no grafo `Arquipelago`
