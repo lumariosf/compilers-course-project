@@ -1,0 +1,43 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Sample_2",
+                span: Span {
+                    start: 6,
+                    end: 14,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "alpha_1",
+                        span: Span {
+                            start: 29,
+                            end: 36,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "beta2",
+                        span: Span {
+                            start: 38,
+                            end: 43,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 46,
+            },
+        },
+    ),
+]
+stderr:
+tests/fixtures/lexer/identifiers.graph:1:7: aviso: grafo `Sample_2` declarado mas não utilizado
+tests/fixtures/lexer/identifiers.graph:2:13: aviso: nó `alpha_1` no grafo `Sample_2` declarado mas não utilizado
+tests/fixtures/lexer/identifiers.graph:2:22: aviso: nó `beta2` no grafo `Sample_2` declarado mas não utilizado

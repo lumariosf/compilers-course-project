@@ -97,7 +97,7 @@ DeclaracaoGrafo: Grafo = {
 };
 
 DeclaracaoGrafoMerge: GrafoMerge = {
-    <l:@L> "Graph" <nome:Ident> "=" <g1:Ident> "." "merge" "(" <g2:Ident> <pontes:("," <Ponte>)*> ")" <r:@R> => GrafoMerge {
+    <l:@L> "Graph" <nome:Ident> "=" <g1:Ident> "." "merge" "(" <g2:Ident> <pontes:("," <Ponte>)+> ")" <r:@R> => GrafoMerge {
         nome,
         g1,
         g2,

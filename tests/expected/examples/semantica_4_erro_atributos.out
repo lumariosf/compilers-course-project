@@ -1,0 +1,10 @@
+exit=1
+stdout:
+stderr:
+examples/semantica_4_erro_atributos.graph:4:19: erro: NodeType `Animal` usado antes de ser declarado
+examples/semantica_4_erro_atributos.graph:7:58: erro: tipo desconhecido `Inteiro` (esperado Number, String, Bool ou Option<T>)
+examples/semantica_4_erro_atributos.graph:9:48: erro: atributo `idade`: esperado Number, encontrado String
+examples/semantica_4_erro_atributos.graph:10:52: erro: `Pessoa` não tem o campo `email`
+examples/semantica_4_erro_atributos.graph:11:49: erro: valor do atributo `idade` deve ser um literal
+examples/semantica_4_erro_atributos.graph:12:12: erro: nó `duda`: falta o campo obrigatório `nome`
+6 erro(s) semântico(s)

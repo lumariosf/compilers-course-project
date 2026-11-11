@@ -1,0 +1,2 @@
+Graph G { Node = a }
+G.short_dist(a, a)

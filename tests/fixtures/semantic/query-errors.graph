@@ -1,0 +1,4 @@
+Graph G { Node = a }
+G.short_dist(a, missing)
+G.filter(for e in G | not 1)
+G.filter(for e in G | 1 + True > 2)

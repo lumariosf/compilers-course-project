@@ -1,0 +1,8 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/duplicate-field-and-invalid-types.graph:2:31: erro: campo `x` repetido em `Bad`
+tests/fixtures/semantic/duplicate-field-and-invalid-types.graph:2:43: erro: Option precisa de um argumento: Option<T>
+tests/fixtures/semantic/duplicate-field-and-invalid-types.graph:2:54: erro: Option<Option<T>> não é permitido
+tests/fixtures/semantic/duplicate-field-and-invalid-types.graph:2:81: erro: tipo genérico desconhecido `List` (o único genérico é Option<T>)
+4 erro(s) semântico(s)

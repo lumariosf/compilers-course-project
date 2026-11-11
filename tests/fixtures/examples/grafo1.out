@@ -1,0 +1,195 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "G",
+                span: Span {
+                    start: 6,
+                    end: 7,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "a",
+                        span: Span {
+                            start: 22,
+                            end: 23,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "b",
+                        span: Span {
+                            start: 25,
+                            end: 26,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "c",
+                        span: Span {
+                            start: 28,
+                            end: 29,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "d",
+                        span: Span {
+                            start: 31,
+                            end: 32,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 55,
+                                end: 56,
+                            },
+                        },
+                        destino: Ident {
+                            name: "b",
+                            span: Span {
+                                start: 60,
+                                end: 61,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 55,
+                            end: 61,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "b",
+                            span: Span {
+                                start: 71,
+                                end: 72,
+                            },
+                        },
+                        destino: Ident {
+                            name: "c",
+                            span: Span {
+                                start: 76,
+                                end: 77,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 71,
+                            end: 77,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "c",
+                            span: Span {
+                                start: 87,
+                                end: 88,
+                            },
+                        },
+                        destino: Ident {
+                            name: "d",
+                            span: Span {
+                                start: 92,
+                                end: 93,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: None,
+                        span: Span {
+                            start: 87,
+                            end: 93,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "e",
+                        span: Span {
+                            start: 112,
+                            end: 113,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 125,
+                                end: 126,
+                            },
+                        },
+                        destino: Ident {
+                            name: "e",
+                            span: Span {
+                                start: 130,
+                                end: 131,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            10.0,
+                        ),
+                        span: Span {
+                            start: 125,
+                            end: 136,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 138,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "G",
+                span: Span {
+                    start: 139,
+                    end: 140,
+                },
+            },
+            chamadas: [
+                ShortDist {
+                    origem: Ident {
+                        name: "a",
+                        span: Span {
+                            start: 152,
+                            end: 153,
+                        },
+                    },
+                    destino: Ident {
+                        name: "d",
+                        span: Span {
+                            start: 155,
+                            end: 156,
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+3
+stderr:

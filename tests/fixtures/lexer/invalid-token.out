@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+Erro de parsing: User { error: "Token inválido na posição 35..36" }

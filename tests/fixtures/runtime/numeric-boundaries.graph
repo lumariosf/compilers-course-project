@@ -1,0 +1,6 @@
+Graph Limits {
+    Node = {start, middle, finish}
+    Edge = {start -> middle : 0.5, middle -> finish : 0.5}
+}
+Limits.short_dist(start, finish)
+Limits.filter(for edge in Limits | (((edge.weight >= 0.5))))

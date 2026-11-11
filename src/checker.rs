@@ -693,17 +693,20 @@ mod tests {
     fn merge() {
         let base = "Graph G1 { Node = {a, b} }\nGraph G2 { Node = {c, d} }\n";
         assert!(erros(&format!("{}Graph G3 = G1.merge(G2, G1.a -> G2.c : 10, G2.d -- G1.b)", base)).is_empty());
-        um_erro(&format!("{}Graph G3 = G1.merge(G9)", base), "grafo `G9` não declarado");
-        um_erro(&format!("{}Graph G3 = G1.merge(G2, G1.a -> G1.b)", base), "mesmo grafo");
+        assert!(crate::grammar::ProgramaParser::new()
+            .parse(crate::lexer::Lexer::new("Graph G1 { Node = a }\nGraph G2 { Node = b }\nGraph G3 = G1.merge(G2)"))
+            .is_err());
+        um_erro(&format!("{}Graph G3 = G1.merge(G9, G1.a -> G9.c)", base), "grafo `G9` não declarado");
+        um_erro(&format!("{}Graph G3 = G1.merge(G1, G1.a -> G1.b)", base), "merge de `G1` com ele mesmo");
         um_erro(&format!("{}Graph G3 = G1.merge(G2, G1.a -> G2.z)", base), "nó `z` não existe em `G2`");
-        um_erro("Graph G1 { Node = a }\nGraph G2 { Node = a }\nGraph G3 = G1.merge(G2)", "existe em `G1` e em `G2`");
+        um_erro("Graph G1 { Node = a }\nGraph G2 { Node = a }\nGraph G3 = G1.merge(G2, G1.a -> G2.a)", "existe em `G1` e em `G2`");
         um_erro(
-            "Graph G1 { NodeType P { x: Number } }\nGraph G2 { NodeType P { x: Bool } }\nGraph G3 = G1.merge(G2)",
+            "Graph G1 { NodeType P { x: Number } Node = a : P { x: 1 } }\nGraph G2 { NodeType P { x: Bool } Node = b : P { x: True } }\nGraph G3 = G1.merge(G2, G1.a -> G2.b)",
             "definido de forma diferente",
         );
-        assert!(erros("Graph G1 { NodeType P { x: Number, y: Bool } }\nGraph G2 { NodeType P { y: Bool, x: Number } }\nGraph G3 = G1.merge(G2)").is_empty());
+        assert!(erros("Graph G1 { NodeType P { x: Number, y: Bool } Node = a : P { x: 1, y: True } }\nGraph G2 { NodeType P { y: Bool, x: Number } Node = b : P { x: 2, y: False } }\nGraph G3 = G1.merge(G2, G1.a -> G2.b)").is_empty());
         // merge com erro não gera erros em cascata nas consultas
-        um_erro(&format!("{}Graph G3 = G1.merge(G9)\nG3.short_dist(a, z)", base), "G9");
+        um_erro(&format!("{}Graph G3 = G1.merge(G9, G1.a -> G9.c)\nG3.short_dist(a, z)", base), "G9");
     }
 
     #[test]

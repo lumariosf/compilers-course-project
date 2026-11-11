@@ -1,0 +1,5 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/duplicate-graph.graph:2:7: erro: grafo `G` já declarado
+1 erro(s) semântico(s)

@@ -1,0 +1,67 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Weight",
+                span: Span {
+                    start: 6,
+                    end: 12,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "x",
+                        span: Span {
+                            start: 27,
+                            end: 28,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "y",
+                        span: Span {
+                            start: 30,
+                            end: 31,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "x",
+                            span: Span {
+                                start: 44,
+                                end: 45,
+                            },
+                        },
+                        destino: Ident {
+                            name: "y",
+                            span: Span {
+                                start: 49,
+                                end: 50,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            2.5,
+                        ),
+                        span: Span {
+                            start: 44,
+                            end: 56,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 58,
+            },
+        },
+    ),
+]
+stderr:
+tests/fixtures/integration/snapshots/snapshot-weighted-edge.graph:1:7: aviso: grafo `Weight` declarado mas não utilizado

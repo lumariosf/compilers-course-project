@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+Erro de parsing: UnrecognizedToken { token: (64, Merge, 69), expected: ["\"filter\"", "\"short_dist\""] }

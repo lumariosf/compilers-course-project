@@ -1,0 +1,4 @@
+Graph G {
+    Node = {a, b}
+    Edge = {a -> b, a -> b}
+}

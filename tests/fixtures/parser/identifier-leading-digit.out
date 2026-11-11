@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+Erro de parsing: UnrecognizedToken { token: (25, Number(1.0), 26), expected: ["\"ident\"", "\"{\""] }

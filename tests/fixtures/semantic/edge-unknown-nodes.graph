@@ -1,0 +1,3 @@
+Graph G {
+    Edge = missing -> absent
+}

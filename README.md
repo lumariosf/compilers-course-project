@@ -96,7 +96,7 @@ Graph rede {
 Regras:
  
 - O `NodeType` é declarado **dentro do grafo** e deve aparecer **antes** de ser usado por um nó.
-- Os tipos dos campos são `Number`, `String`, `Bool`.
+- Os tipos dos campos são `Number`, `String`, `Bool` e `Option<T>` (com `T` igual a um tipo primitivo; `Option<Option<T>>` não é permitido).
 - O valor de um atributo deve ser um literal (`20`, `-5`, `"Ana"`, `True`) do tipo declarado.
 - Cada atributo informado deve existir no `NodeType`, e não pode ser repetido.
 - Nós sem tipo (`Node = a`) continuam válidos e simplesmente não têm atributos.
@@ -112,7 +112,7 @@ Arestas tem 4 atributos que podem ser acessados:
 
 `destination`: identifica o nó da direita do operador.
 
-`edge type`: define o tipo da aresta, bidirecional ou unidirecional.
+`type`: define o tipo da aresta (`"->"` ou `"--"`).
 
 `weight`: define o peso da aresta, default de 1.
 
@@ -163,7 +163,7 @@ Essa consulta permite a filtragem dos atributos de um grafo baseado na especific
 
 ```bash
 
-filter(for e in myGraph | e.weight >= 5 and not e.destination == "X")
+myGraph.filter(for e in myGraph | e.weight >= 5 and not e.destination == "X")
 
 ```
 
@@ -176,7 +176,7 @@ Genericamente, siga o modelo `for {variable} in {source} | {condition}` para def
 ---
 #### merge
  
-O `merge` **cria um novo grafo** a partir de dois grafos existentes, que permanecem intactos. O resultado deve ser ligado a um nome com a declaração `Graph`. Para conectar os dois grafos, informe uma ou mais **pontes** depois do segundo grafo. Cada ponte é uma aresta cujas extremidades são **qualificadas** com o nome do grafo (`Grafo.nó`):
+O `merge` **cria um novo grafo** a partir de dois grafos existentes, que permanecem intactos. O resultado deve ser ligado a um nome com a declaração `Graph`. Para conectar os dois grafos, informe uma ou mais **pontes** depois do segundo grafo. Uma declaração sem pontes é rejeitada pela gramática. Cada ponte é uma aresta cujas extremidades são **qualificadas** com o nome do grafo (`Grafo.nó`):
  
 ```
 Graph G3 = G1.merge(G2, G1.a -> G2.b : 10, G2.c -> G1.k)
@@ -287,8 +287,6 @@ Qualquer outro identificador além da variável do `for` é erro (para comparar 
 | Valor de atributo | literal: número, texto, `True`/`False` ou número negativo (`-5`) | conforme a seção 5 |
 | Nós sem caminho no `short_dist` | continua sendo erro de execução, não de compilação | conforme a seção 7 |
 
-> **Pendente de atualização nas seções anteriores:** a seção 5 ainda não cita `Option<T>` na lista de tipos de campo; a seção 6 descreve o tipo da aresta como `edge type`, que no `filter` é `e.type`; e a seção 7 ainda não mostra o acesso a atributos de nós (`e.origin.idade`). Essas seções serão revisadas depois.
-
 ### 9. Interpretador e Execução
 
 Após a verificação semântica, o programa é executado pelo interpretador (`src/interpreter.rs`).
@@ -312,5 +310,40 @@ Para rodar todos os exemplos do interpretador:
 ```bash
 for f in examples/interpretador_*.graph; do echo "== $f"; cargo run -q -- "$f"; done
 ```
+
+## Como rodar os testes
+
+Execute a suíte completa na raiz do repositório:
+
+```bash
+make test
+```
+
+O comando roda os testes unitários Rust (`cargo test`) e os testes de integração com snapshots `.out`. A estrutura de casos é:
+
+```text
+tests/
+├── fixtures/
+│   ├── examples/       # cópias dos exemplos originais de sintaxe
+│   ├── lexer/          # entradas léxicas
+│   ├── parser/         # entradas gramaticais
+│   ├── semantic/       # erros de verificação semântica
+│   ├── runtime/        # consultas válidas e erros em execução
+│   └── integration/    # combinações de recursos e consultas
+├── expected/examples/  # saídas dos arquivos originais em examples/
+└── run-golden.sh       # runner de comparação exata
+```
+
+Cada entrada `.graph` tem um `.out` homônimo. O snapshot registra o código de saída, stdout e stderr, incluindo avisos e posições dos diagnósticos. O runner compara bytes e mostra um diff unificado em caso de divergência. Para executar apenas essa parte, use `make golden`.
+
+Ao adicionar um caso, coloque o `.graph` na pasta que representa a fase testada e crie/revise manualmente seu snapshot:
+
+```bash
+./tests/run-golden.sh --bless
+```
+
+Esse comando executa o compilador atual e atualiza os `.out`; revise as mensagens, o código de saída e a saída do programa antes de manter as alterações. A execução normal de `make test` nunca modifica snapshots.
+
+A linguagem GRAPH deste projeto não possui funções, retornos, escopo de variáveis, recursão nem comandos de laço/condicional; esses casos não se aplicam. Os casos cobrem as declarações de grafo, `NodeType`, merges, `filter`, `short_dist`, precedência de expressões e erros suportados pelo checker e interpretador.
 
 

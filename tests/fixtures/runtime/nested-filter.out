@@ -1,0 +1,212 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "Nested",
+                span: Span {
+                    start: 6,
+                    end: 12,
+                },
+            },
+            membros: [
+                Node(
+                    Ident {
+                        name: "a",
+                        span: Span {
+                            start: 27,
+                            end: 28,
+                        },
+                    },
+                ),
+                Node(
+                    Ident {
+                        name: "b",
+                        span: Span {
+                            start: 30,
+                            end: 31,
+                        },
+                    },
+                ),
+                Edge(
+                    Aresta {
+                        origem: Ident {
+                            name: "a",
+                            span: Span {
+                                start: 44,
+                                end: 45,
+                            },
+                        },
+                        destino: Ident {
+                            name: "b",
+                            span: Span {
+                                start: 49,
+                                end: 50,
+                            },
+                        },
+                        tipo: Direcionada,
+                        peso: Some(
+                            2.0,
+                        ),
+                        span: Span {
+                            start: 44,
+                            end: 54,
+                        },
+                    },
+                ),
+            ],
+            span: Span {
+                start: 0,
+                end: 56,
+            },
+        },
+    ),
+    Consulta(
+        ExpressaoConsulta {
+            grafo: Ident {
+                name: "Nested",
+                span: Span {
+                    start: 57,
+                    end: 63,
+                },
+            },
+            chamadas: [
+                Filter {
+                    filtro: Filtro {
+                        variavel: Ident {
+                            name: "edge",
+                            span: Span {
+                                start: 75,
+                                end: 79,
+                            },
+                        },
+                        fonte: Ident {
+                            name: "Nested",
+                            span: Span {
+                                start: 83,
+                                end: 89,
+                            },
+                        },
+                        condicao: Expr {
+                            kind: Unario(
+                                Not,
+                                Expr {
+                                    kind: Unario(
+                                        Not,
+                                        Expr {
+                                            kind: Unario(
+                                                Not,
+                                                Expr {
+                                                    kind: Unario(
+                                                        Not,
+                                                        Expr {
+                                                            kind: Unario(
+                                                                Not,
+                                                                Expr {
+                                                                    kind: Unario(
+                                                                        Not,
+                                                                        Expr {
+                                                                            kind: Unario(
+                                                                                Not,
+                                                                                Expr {
+                                                                                    kind: Unario(
+                                                                                        Not,
+                                                                                        Expr {
+                                                                                            kind: Binario(
+                                                                                                Expr {
+                                                                                                    kind: Acesso(
+                                                                                                        Expr {
+                                                                                                            kind: Identificador(
+                                                                                                                "edge",
+                                                                                                            ),
+                                                                                                            span: Span {
+                                                                                                                start: 125,
+                                                                                                                end: 129,
+                                                                                                            },
+                                                                                                        },
+                                                                                                        Ident {
+                                                                                                            name: "weight",
+                                                                                                            span: Span {
+                                                                                                                start: 130,
+                                                                                                                end: 136,
+                                                                                                            },
+                                                                                                        },
+                                                                                                    ),
+                                                                                                    span: Span {
+                                                                                                        start: 125,
+                                                                                                        end: 136,
+                                                                                                    },
+                                                                                                },
+                                                                                                Eq,
+                                                                                                Expr {
+                                                                                                    kind: Numero(
+                                                                                                        3.0,
+                                                                                                    ),
+                                                                                                    span: Span {
+                                                                                                        start: 140,
+                                                                                                        end: 141,
+                                                                                                    },
+                                                                                                },
+                                                                                            ),
+                                                                                            span: Span {
+                                                                                                start: 125,
+                                                                                                end: 141,
+                                                                                            },
+                                                                                        },
+                                                                                    ),
+                                                                                    span: Span {
+                                                                                        start: 120,
+                                                                                        end: 142,
+                                                                                    },
+                                                                                },
+                                                                            ),
+                                                                            span: Span {
+                                                                                start: 116,
+                                                                                end: 142,
+                                                                            },
+                                                                        },
+                                                                    ),
+                                                                    span: Span {
+                                                                        start: 112,
+                                                                        end: 142,
+                                                                    },
+                                                                },
+                                                            ),
+                                                            span: Span {
+                                                                start: 108,
+                                                                end: 142,
+                                                            },
+                                                        },
+                                                    ),
+                                                    span: Span {
+                                                        start: 104,
+                                                        end: 142,
+                                                    },
+                                                },
+                                            ),
+                                            span: Span {
+                                                start: 100,
+                                                end: 142,
+                                            },
+                                        },
+                                    ),
+                                    span: Span {
+                                        start: 96,
+                                        end: 142,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 92,
+                                end: 142,
+                            },
+                        },
+                    },
+                },
+            ],
+        },
+    ),
+]
+[]
+stderr:

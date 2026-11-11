@@ -1,0 +1,22 @@
+exit=0
+stdout:
+[
+    Grafo(
+        Grafo {
+            nome: Ident {
+                name: "G1",
+                span: Span {
+                    start: 6,
+                    end: 8,
+                },
+            },
+            membros: [],
+            span: Span {
+                start: 0,
+                end: 11,
+            },
+        },
+    ),
+]
+stderr:
+tests/fixtures/examples/grafo3.graph:1:7: aviso: grafo `G1` declarado mas não utilizado

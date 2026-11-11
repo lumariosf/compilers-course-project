@@ -1,0 +1,4 @@
+Graph A { Node = a }
+Graph B { Node = b }
+Graph Self = A.merge(A)
+Graph Repeated = A.merge(B, A.a -> B.b, A.a -> B.b)

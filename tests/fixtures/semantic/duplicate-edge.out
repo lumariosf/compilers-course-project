@@ -1,0 +1,5 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/duplicate-edge.graph:3:21: erro: aresta `a -> b` repete uma aresta já declarada em `G`
+1 erro(s) semântico(s)

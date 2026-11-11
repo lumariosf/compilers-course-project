@@ -1,0 +1,7 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/query-errors.graph:2:17: erro: nó `missing` não existe em `G`
+tests/fixtures/semantic/query-errors.graph:3:27: erro: `not` espera Bool, encontrado Number
+tests/fixtures/semantic/query-errors.graph:4:27: erro: `+` espera Number, encontrado Bool
+3 erro(s) semântico(s)

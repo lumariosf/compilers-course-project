@@ -1,0 +1,5 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/lexer/boolean-case.graph:3:48: erro: valor do atributo `lower` deve ser um literal
+1 erro(s) semântico(s)

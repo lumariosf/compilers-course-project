@@ -1,0 +1,5 @@
+Graph Nested {
+    Node = {a, b}
+    Edge = a -> b : 2
+}
+Nested.filter(for edge in Nested | not not not not not not not not (edge.weight == 3))

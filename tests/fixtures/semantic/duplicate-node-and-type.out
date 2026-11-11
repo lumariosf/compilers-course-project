@@ -1,0 +1,6 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/duplicate-node-and-type.graph:3:12: erro: nó `a` já declarado em `G`
+tests/fixtures/semantic/duplicate-node-and-type.graph:5:14: erro: NodeType `P` já declarado neste grafo
+2 erro(s) semântico(s)
