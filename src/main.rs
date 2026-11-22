@@ -11,13 +11,12 @@ use std::fs;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-
-    if args.len() < 2 {
-        eprintln!("Uso: cargo run -- <arquivo>");
+    let mostrar_ast = args.iter().any(|a| a == "--ast");
+   
+    let Some(caminho) = args.iter().skip(1).find(|a| !a.starts_with("--")) else {
+        eprintln!("Uso: cargo run -- [--ast] <arquivo>");
         return;
-    }
-
-    let caminho = &args[1];
+    };
 
     let entrada = match fs::read_to_string(caminho) {
         Ok(conteudo) => conteudo,
@@ -32,7 +31,10 @@ fn main() {
     match parser.parse(lexer::Lexer::new(&entrada)) {
         Ok(programa) => match checker::checar(&programa) {
             Ok(()) => {
-                println!("{:#?}", programa);
+                // println!("{:#?}", programa);
+                if mostrar_ast {
+                    println!("{:#?}", programa);
+                }
                 for aviso in interpreter::avisos(&programa) {
                     let (linha, coluna) = types::linha_coluna(&entrada, aviso.span.start);
                     eprintln!("{}:{}:{}: aviso: {}", caminho, linha, coluna, aviso.msg);

@@ -37,7 +37,12 @@ for input in "${examples[@]}" "${fixtures[@]}"; do
         *) category=grammar ;;
     esac
 
-    if "$binary" "$relative" >"$tmp/stdout" 2>"$tmp/stderr"; then
+    flags=()
+    if [[ "$category" == grammar ]]; then
+        flags=(--ast)
+    fi
+
+    if "$binary" "${flags[@]}" "$relative" >"$tmp/stdout" 2>"$tmp/stderr"; then
         status=0
     else
         status=$?
