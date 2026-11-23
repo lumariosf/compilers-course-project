@@ -18,6 +18,8 @@ extern {
         "and" => Token::And,
         "or" => Token::Or,
         "not" => Token::Not,
+        "let" => Token::Let,
+        "print" => Token::Print,
 
         "short_dist" => Token::ShortDist,
         "filter" => Token::Filter,
@@ -72,6 +74,25 @@ Item: Item = {
     <g:DeclaracaoGrafo> => Item::Grafo(g),
     <m:DeclaracaoGrafoMerge> => Item::GrafoMerge(m),
     <c:ComandoConsulta> => Item::Consulta(c),
+    <l:DeclaracaoLet> => Item::Let(l),
+    <p:ComandoPrint> => Item::Print(p),
+};
+
+// let nome = expr;
+DeclaracaoLet: LetDecl = {
+    <l:@L> "let" <nome:Ident> "=" <valor:Expr> ";" <r:@R> => LetDecl {
+        nome,
+        valor,
+        span: Span { start: l, end: r },
+    },
+};
+
+// print(e1, e2, ...);
+ComandoPrint: PrintStmt = {
+    <l:@L> "print" "(" <args:Comma<Expr>> ")" ";" <r:@R> => PrintStmt {
+        args,
+        span: Span { start: l, end: r },
+    },
 };
 
 
@@ -334,6 +355,12 @@ ExprUnario: Expr = {
 ExprPos: Expr = {
     <l:@L> <base:ExprPos> "." <campo:Ident> <r:@R> => Expr {
         kind: ExprKind::Acesso(Box::new(base), campo),
+        span: Span { start: l, end: r },
+    },
+    // G.short_dist(a, b) e G.filter(...) como expressão (encadeáveis: G.filter(...).short_dist(a, b)).
+    // Sem conflito com o acesso `e.campo`: short_dist/filter são palavras-chave, não "ident".
+    <l:@L> <base:ExprPos> "." <c:Chamada> <r:@R> => Expr {
+        kind: ExprKind::Consulta(Box::new(base), Box::new(c)),
         span: Span { start: l, end: r },
     },
     ExprPrimaria,

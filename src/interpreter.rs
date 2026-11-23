@@ -55,6 +55,7 @@ pub enum Valor {
     Bool(bool),
     No(String),
     Ausente,
+    Consulta(ResultadoConsulta), // resultado de G.filter(...): lista de arestas
 }
 
 impl fmt::Display for Valor {
@@ -71,6 +72,7 @@ impl fmt::Display for Valor {
             Valor::Bool(b) => write!(f, "{}", if *b { "True" } else { "False" }),
             Valor::No(n) => write!(f, "{}", n),
             Valor::Ausente => write!(f, "None"),
+            Valor::Consulta(r) => write!(f, "{}", r),
         }
     }
 }
@@ -180,11 +182,13 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
                 grafos_usados.insert(m.g1.name.clone());
                 grafos_usados.insert(m.g2.name.clone());
             }
-            Item::Consulta(c) => {
-                grafos_usados.insert(c.grafo.name.clone());
-                for chamada in &c.chamadas {
-                    if let Chamada::Filter { filtro } = chamada {
-                        grafos_usados.insert(filtro.fonte.name.clone());
+            Item::Consulta(_) | Item::Let(_) | Item::Print(_) => {
+                for c in consultas_do_item(item) {
+                    grafos_usados.insert(c.grafo.name.clone());
+                    for chamada in &c.chamadas {
+                        if let Chamada::Filter { filtro } = chamada {
+                            grafos_usados.insert(filtro.fonte.name.clone());
+                        }
                     }
                 }
             }
@@ -234,7 +238,7 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
 
             // Uso em consultas short_dist
             for outro in programa {
-                if let Item::Consulta(c) = outro {
+                for c in consultas_do_item(outro) {
                     for chamada in &c.chamadas {
                         if let Chamada::ShortDist { origem, destino } = chamada {
                             nos_usados.insert(origem.name.clone());
@@ -260,7 +264,7 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
 
     // 3. Variáveis de filtro declaradas mas não utilizadas na condição do filter
     for item in programa {
-        if let Item::Consulta(c) = item {
+        for c in consultas_do_item(item) {
             for chamada in &c.chamadas {
                 if let Chamada::Filter { filtro } = chamada {
                     if !expr_utiliza_var(&filtro.condicao, &filtro.variavel.name) {
@@ -280,6 +284,41 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
     lista
 }
 
+// Todas as consultas (G.short_dist(...), G.filter(...)) de um item, inclusive as que estão
+// dentro de `let` e `print`. Usado pelos avisos.
+fn consultas_do_item(item: &Item) -> Vec<ExpressaoConsulta> {
+    let mut saida = Vec::new();
+    match item {
+        Item::Consulta(c) => saida.push(c.clone()),
+        Item::Let(l) => coletar_consultas(&l.valor, &mut saida),
+        Item::Print(p) => {
+            for arg in &p.args {
+                coletar_consultas(arg, &mut saida);
+            }
+        }
+        Item::Grafo(_) | Item::GrafoMerge(_) => {}
+    }
+    saida
+}
+
+fn coletar_consultas(expr: &Expr, saida: &mut Vec<ExpressaoConsulta>) {
+    match &expr.kind {
+        // `como_consulta` já junta a cadeia inteira: não descemos nos filhos para não contar duas vezes
+        ExprKind::Consulta(_, _) => {
+            if let Some(c) = expr.como_consulta() {
+                saida.push(c);
+            }
+        }
+        ExprKind::Acesso(base, _) => coletar_consultas(base, saida),
+        ExprKind::Unario(_, interno) => coletar_consultas(interno, saida),
+        ExprKind::Binario(l, _, r) => {
+            coletar_consultas(l, saida);
+            coletar_consultas(r, saida);
+        }
+        ExprKind::Numero(_) | ExprKind::Texto(_) | ExprKind::Bool(_) | ExprKind::Identificador(_) => {}
+    }
+}
+
 fn expr_utiliza_var(expr: &Expr, var: &str) -> bool {
     match &expr.kind {
         ExprKind::Identificador(id) => id == var,
@@ -287,12 +326,14 @@ fn expr_utiliza_var(expr: &Expr, var: &str) -> bool {
         ExprKind::Unario(_, inner) => expr_utiliza_var(inner, var),
         ExprKind::Binario(l, _, r) => expr_utiliza_var(l, var) || expr_utiliza_var(r, var),
         ExprKind::Numero(_) | ExprKind::Texto(_) | ExprKind::Bool(_) => false,
+        ExprKind::Consulta(_, _) => false,
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Interpretador {
     grafos: HashMap<String, GrafoRuntime>,
+    variaveis: HashMap<String, Valor>,   // `let` (imutáveis: cada nome é gravado uma única vez)
 }
 
 impl Default for Interpretador {
@@ -305,6 +346,7 @@ impl Interpretador {
     pub fn new() -> Self {
         Interpretador {
             grafos: HashMap::new(),
+            variaveis: HashMap::new(),
         }
     }
 
@@ -337,6 +379,100 @@ impl Interpretador {
             Item::Consulta(c) => {
                 let res = self.executar_consulta(c)?;
                 Ok(Some(res))
+            }
+            Item::Let(l) => {
+                let valor = self.avaliar_topo(&l.valor)?;
+                self.variaveis.insert(l.nome.name.clone(), valor);
+                Ok(None)
+            }
+            Item::Print(p) => {
+                let mut partes: Vec<String> = Vec::new();
+                for arg in &p.args {
+                    let valor = self.avaliar_topo(arg)?;
+                    partes.push(formatar_para_print(&valor));
+                }
+                println!("{}", partes.join(" "));
+                Ok(None)
+            }
+        }
+    }
+
+    // Avalia uma expressão fora do filter: enxerga variáveis do `let` e executa consultas.
+    // G.short_dist(...) vira Numero; G.filter(...) vira Valor::Consulta (lista de arestas).
+    fn avaliar_topo(&self, expr: &Expr) -> Result<Valor, ErroExecucao> {
+        match &expr.kind {
+            ExprKind::Numero(n) => Ok(Valor::Numero(*n)),
+            ExprKind::Texto(s) => Ok(Valor::Texto(s.clone())),
+            ExprKind::Bool(b) => Ok(Valor::Bool(*b)),
+            ExprKind::Identificador(nome) => self.variaveis.get(nome).cloned().ok_or_else(|| {
+                ErroExecucao::new(expr.span, format!("variável `{}` não encontrada", nome))
+            }),
+            ExprKind::Acesso(_, campo) => Err(ErroExecucao::new(
+                campo.span,
+                "acesso a campo só é permitido dentro de um filter",
+            )),
+            ExprKind::Unario(op, interno) => {
+                let valor = self.avaliar_topo(interno)?;
+                aplicar_unario(op, valor, interno.span)
+            }
+            ExprKind::Binario(l, op, r) => match op {
+                BinOp::And => {
+                    let vl = self.avaliar_topo(l)?;
+                    match vl {
+                        Valor::Bool(false) => return Ok(Valor::Bool(false)),
+                        Valor::Bool(true) => {}
+                        outro => {
+                            return Err(ErroExecucao::new(
+                                l.span,
+                                format!("operador `and` espera Bool, encontrado {}", outro),
+                            ))
+                        }
+                    }
+                    let vr = self.avaliar_topo(r)?;
+                    match vr {
+                        Valor::Bool(b) => Ok(Valor::Bool(b)),
+                        outro => Err(ErroExecucao::new(
+                            r.span,
+                            format!("operador `and` espera Bool, encontrado {}", outro),
+                        )),
+                    }
+                }
+                BinOp::Or => {
+                    let vl = self.avaliar_topo(l)?;
+                    match vl {
+                        Valor::Bool(true) => return Ok(Valor::Bool(true)),
+                        Valor::Bool(false) => {}
+                        outro => {
+                            return Err(ErroExecucao::new(
+                                l.span,
+                                format!("operador `or` espera Bool, encontrado {}", outro),
+                            ))
+                        }
+                    }
+                    let vr = self.avaliar_topo(r)?;
+                    match vr {
+                        Valor::Bool(b) => Ok(Valor::Bool(b)),
+                        outro => Err(ErroExecucao::new(
+                            r.span,
+                            format!("operador `or` espera Bool, encontrado {}", outro),
+                        )),
+                    }
+                }
+                _ => {
+                    let vl = self.avaliar_topo(l)?;
+                    let vr = self.avaliar_topo(r)?;
+                    aplicar_binario(*op, vl, vr, l.span, r.span)
+                }
+            },
+            ExprKind::Consulta(_, _) => {
+                let c = expr.como_consulta().ok_or_else(|| {
+                    ErroExecucao::new(expr.span, "uma consulta deve começar pelo nome de um grafo")
+                })?;
+                let resultado = self.executar_consulta(&c)?;
+                Ok(match resultado {
+                    ResultadoConsulta::Distancia { distancia, .. } => Valor::Numero(distancia),
+                    outro => Valor::Consulta(outro),
+                })
             }
         }
     }
@@ -571,18 +707,7 @@ fn avaliar_expr(expr: &Expr, ctx: Option<&ContextoAresta>) -> Result<Valor, Erro
         }
         ExprKind::Unario(op, inner) => {
             let val = avaliar_expr(inner, ctx)?;
-            match (op, val) {
-                (UnOp::Not, Valor::Bool(b)) => Ok(Valor::Bool(!b)),
-                (UnOp::Neg, Valor::Numero(n)) => Ok(Valor::Numero(-n)),
-                (UnOp::Not, outro) => Err(ErroExecucao::new(
-                    inner.span,
-                    format!("operador `not` espera Bool, encontrado {}", outro),
-                )),
-                (UnOp::Neg, outro) => Err(ErroExecucao::new(
-                    inner.span,
-                    format!("operador `-` espera Number, encontrado {}", outro),
-                )),
-            }
+            aplicar_unario(op, val, inner.span)
         }
         ExprKind::Binario(l, op, r) => {
             // Operadores com curto-circuito
@@ -634,85 +759,117 @@ fn avaliar_expr(expr: &Expr, ctx: Option<&ContextoAresta>) -> Result<Valor, Erro
 
             let vl = avaliar_expr(l, ctx)?;
             let vr = avaliar_expr(r, ctx)?;
+            aplicar_binario(*op, vl, vr, l.span, r.span)
+        }
+        ExprKind::Consulta(_, _) => Err(ErroExecucao::new(
+            expr.span,
+            "consultas não são permitidas dentro de uma condição de filter",
+        )),
+    }
+}
 
+// Aplica um operador unário a um valor já avaliado (usado pelo filter e pelo `let`/`print`)
+fn aplicar_unario(op: &UnOp, val: Valor, inner_span: Span) -> Result<Valor, ErroExecucao> {
+    match (op, val) {
+        (UnOp::Not, Valor::Bool(b)) => Ok(Valor::Bool(!b)),
+        (UnOp::Neg, Valor::Numero(n)) => Ok(Valor::Numero(-n)),
+        (UnOp::Not, outro) => Err(ErroExecucao::new(
+            inner_span,
+            format!("operador `not` espera Bool, encontrado {}", outro),
+        )),
+        (UnOp::Neg, outro) => Err(ErroExecucao::new(
+            inner_span,
+            format!("operador `-` espera Number, encontrado {}", outro),
+        )),
+    }
+}
+
+// Aplica um operador binário (exceto and/or, que têm curto-circuito) a valores já avaliados
+fn aplicar_binario(op: BinOp, vl: Valor, vr: Valor, l_span: Span, r_span: Span) -> Result<Valor, ErroExecucao> {
+    match op {
+        BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Mod => {
+            let nl = match vl {
+                Valor::Numero(n) => n,
+                outro => {
+                    return Err(ErroExecucao::new(
+                        l_span,
+                        format!("operador aritmético espera Number, encontrado {}", outro),
+                    ));
+                }
+            };
+            let nr = match vr {
+                Valor::Numero(n) => n,
+                outro => {
+                    return Err(ErroExecucao::new(
+                        r_span,
+                        format!("operador aritmético espera Number, encontrado {}", outro),
+                    ));
+                }
+            };
             match op {
-                BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Mod => {
-                    let nl = match vl {
-                        Valor::Numero(n) => n,
-                        outro => {
-                            return Err(ErroExecucao::new(
-                                l.span,
-                                format!("operador aritmético espera Number, encontrado {}", outro),
-                            ));
-                        }
-                    };
-                    let nr = match vr {
-                        Valor::Numero(n) => n,
-                        outro => {
-                            return Err(ErroExecucao::new(
-                                r.span,
-                                format!("operador aritmético espera Number, encontrado {}", outro),
-                            ));
-                        }
-                    };
-                    match op {
-                        BinOp::Add => Ok(Valor::Numero(nl + nr)),
-                        BinOp::Sub => Ok(Valor::Numero(nl - nr)),
-                        BinOp::Mul => Ok(Valor::Numero(nl * nr)),
-                        BinOp::Div => {
-                            if nr == 0.0 {
-                                Err(ErroExecucao::new(r.span, "divisão por zero"))
-                            } else {
-                                Ok(Valor::Numero(nl / nr))
-                            }
-                        }
-                        BinOp::Mod => {
-                            if nr == 0.0 {
-                                Err(ErroExecucao::new(r.span, "divisão por zero no operador `%`"))
-                            } else {
-                                Ok(Valor::Numero(nl % nr))
-                            }
-                        }
-                        _ => unreachable!(),
+                BinOp::Add => Ok(Valor::Numero(nl + nr)),
+                BinOp::Sub => Ok(Valor::Numero(nl - nr)),
+                BinOp::Mul => Ok(Valor::Numero(nl * nr)),
+                BinOp::Div => {
+                    if nr == 0.0 {
+                        Err(ErroExecucao::new(r_span, "divisão por zero"))
+                    } else {
+                        Ok(Valor::Numero(nl / nr))
                     }
                 }
-                BinOp::Gt | BinOp::Gte | BinOp::Lt | BinOp::Lte => {
-                    // Option ausente avalia para false nas comparações relacionais
-                    if vl == Valor::Ausente || vr == Valor::Ausente {
-                        return Ok(Valor::Bool(false));
+                BinOp::Mod => {
+                    if nr == 0.0 {
+                        Err(ErroExecucao::new(r_span, "divisão por zero no operador `%`"))
+                    } else {
+                        Ok(Valor::Numero(nl % nr))
                     }
-                    let nl = match vl {
-                        Valor::Numero(n) => n,
-                        outro => {
-                            return Err(ErroExecucao::new(
-                                l.span,
-                                format!("comparação relacional espera Number, encontrado {}", outro),
-                            ));
-                        }
-                    };
-                    let nr = match vr {
-                        Valor::Numero(n) => n,
-                        outro => {
-                            return Err(ErroExecucao::new(
-                                r.span,
-                                format!("comparação relacional espera Number, encontrado {}", outro),
-                            ));
-                        }
-                    };
-                    let res = match op {
-                        BinOp::Gt => nl > nr,
-                        BinOp::Gte => nl >= nr,
-                        BinOp::Lt => nl < nr,
-                        BinOp::Lte => nl <= nr,
-                        _ => unreachable!(),
-                    };
-                    Ok(Valor::Bool(res))
                 }
-                BinOp::Eq => Ok(Valor::Bool(comparar_igualdade(&vl, &vr))),
-                BinOp::Neq => Ok(Valor::Bool(!comparar_igualdade(&vl, &vr))),
-                BinOp::And | BinOp::Or => unreachable!(),
+                _ => unreachable!(),
             }
         }
+        BinOp::Gt | BinOp::Gte | BinOp::Lt | BinOp::Lte => {
+            // Option ausente avalia para false nas comparações relacionais
+            if vl == Valor::Ausente || vr == Valor::Ausente {
+                return Ok(Valor::Bool(false));
+            }
+            let nl = match vl {
+                Valor::Numero(n) => n,
+                outro => {
+                    return Err(ErroExecucao::new(
+                        l_span,
+                        format!("comparação relacional espera Number, encontrado {}", outro),
+                    ));
+                }
+            };
+            let nr = match vr {
+                Valor::Numero(n) => n,
+                outro => {
+                    return Err(ErroExecucao::new(
+                        r_span,
+                        format!("comparação relacional espera Number, encontrado {}", outro),
+                    ));
+                }
+            };
+            let res = match op {
+                BinOp::Gt => nl > nr,
+                BinOp::Gte => nl >= nr,
+                BinOp::Lt => nl < nr,
+                BinOp::Lte => nl <= nr,
+                _ => unreachable!(),
+            };
+            Ok(Valor::Bool(res))
+        }
+        BinOp::Eq => Ok(Valor::Bool(comparar_igualdade(&vl, &vr))),
+        BinOp::Neq => Ok(Valor::Bool(!comparar_igualdade(&vl, &vr))),
+        BinOp::And | BinOp::Or => unreachable!(),
+    }
+}
+
+// print mostra texto sem aspas; os demais valores usam o formato de sempre
+fn formatar_para_print(v: &Valor) -> String {
+    match v {
+        Valor::Texto(s) => s.clone(),
+        outro => outro.to_string(),
     }
 }
 

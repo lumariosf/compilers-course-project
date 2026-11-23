@@ -36,6 +36,10 @@ pub struct Checker {
     grafos: HashMap<String, InfoGrafo>,
     // Merges que falharam: ficam registrados, mas consultas sobre eles são ignoradas (evita cascata)
     incompletos: HashSet<String>,
+    // `let` declarados até aqui e o tipo de cada um (imutáveis)
+    variaveis: HashMap<String, Tipo>,
+    // `let` cujo valor tinha erro: usos posteriores não geram erro em cascata
+    variaveis_invalidas: HashSet<String>,
     erros: Vec<ErroSemantico>,
 }
 
@@ -55,7 +59,13 @@ pub fn checar(programa: &[Item]) -> Result<(), Vec<ErroSemantico>> {
 
 impl Checker {
     fn new() -> Self {
-        Checker { grafos: HashMap::new(), incompletos: HashSet::new(), erros: Vec::new() }
+        Checker {
+            grafos: HashMap::new(),
+            incompletos: HashSet::new(),
+            variaveis: HashMap::new(),
+            variaveis_invalidas: HashSet::new(),
+            erros: Vec::new(),
+        }
     }
 
     fn erro(&mut self, span: Span, msg: impl Into<String>) {
@@ -67,6 +77,8 @@ impl Checker {
             Item::Grafo(g) => self.checar_grafo(g),
             Item::GrafoMerge(m) => self.checar_merge(m),
             Item::Consulta(c) => self.checar_consulta(c),
+            Item::Let(l) => self.checar_let(l),
+            Item::Print(p) => self.checar_print(p),
         }
     }
 
@@ -336,6 +348,137 @@ impl Checker {
         }
     }
 
+    // ========== let e print (expressões fora do filter)
+
+    fn checar_let(&mut self, l: &LetDecl) {
+        let nome = &l.nome.name;
+        // O valor é checado ANTES de declarar o nome: `let x = x + 1;` é erro (x ainda não existe)
+        let tipo = self.tipo_expr(&l.valor);
+
+        if self.grafos.contains_key(nome) {
+            self.erro(l.nome.span, format!("`{}` já é o nome de um grafo", nome));
+            return;
+        }
+        if self.variaveis.contains_key(nome) || self.variaveis_invalidas.contains(nome) {
+            self.erro(l.nome.span, format!("variável `{}` já declarada (variáveis são imutáveis)", nome));
+            return;
+        }
+        match tipo {
+            Some(t) => {
+                self.variaveis.insert(nome.clone(), t);
+            }
+            None => {
+                self.variaveis_invalidas.insert(nome.clone());
+            }
+        }
+    }
+
+    fn checar_print(&mut self, p: &PrintStmt) {
+        for arg in &p.args {
+            let _ = self.tipo_expr(arg);
+        }
+    }
+
+    // None = a expressão tem erro (já reportado); quem recebe None não reporta de novo
+    fn tipo_expr(&mut self, e: &Expr) -> Option<Tipo> {
+        match &e.kind {
+            ExprKind::Numero(_) => Some(Tipo::Number),
+            ExprKind::Texto(_) => Some(Tipo::String),
+            ExprKind::Bool(_) => Some(Tipo::Bool),
+            ExprKind::Identificador(x) => {
+                if let Some(t) = self.variaveis.get(x) {
+                    return Some(t.clone());
+                }
+                if self.variaveis_invalidas.contains(x) {
+                    return None;
+                }
+                if self.grafos.contains_key(x) {
+                    self.erro(
+                        e.span,
+                        format!("`{}` é um grafo: use `{}.short_dist(...)` ou `{}.filter(...)`", x, x, x),
+                    );
+                } else {
+                    self.erro(e.span, format!("variável `{}` não declarada", x));
+                }
+                None
+            }
+            ExprKind::Acesso(_, campo) => {
+                self.erro(campo.span, format!("acesso a `{}` só é permitido dentro de um filter", campo.name));
+                None
+            }
+            ExprKind::Unario(op, interno) => {
+                let t = self.tipo_expr(interno);
+                let (esperado, simb) = match op {
+                    UnOp::Not => (Tipo::Bool, "not"),
+                    UnOp::Neg => (Tipo::Number, "-"),
+                };
+                self.exigir_tipo(interno, t, &esperado, simb);
+                Some(esperado)
+            }
+            ExprKind::Binario(l, op, r) => self.tipo_binario(l, *op, r),
+            ExprKind::Consulta(_, _) => self.tipo_consulta(e),
+        }
+    }
+
+    fn tipo_binario(&mut self, l: &Expr, op: BinOp, r: &Expr) -> Option<Tipo> {
+        let tl = self.tipo_expr(l);
+        let tr = self.tipo_expr(r);
+        let simb = simbolo(op);
+        match op {
+            BinOp::And | BinOp::Or => {
+                self.exigir_tipo(l, tl, &Tipo::Bool, simb);
+                self.exigir_tipo(r, tr, &Tipo::Bool, simb);
+                Some(Tipo::Bool)
+            }
+            BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Mod => {
+                self.exigir_tipo(l, tl, &Tipo::Number, simb);
+                self.exigir_tipo(r, tr, &Tipo::Number, simb);
+                Some(Tipo::Number)
+            }
+            BinOp::Gt | BinOp::Gte | BinOp::Lt | BinOp::Lte => {
+                self.exigir_tipo(l, tl.as_ref().map(sem_option).cloned(), &Tipo::Number, simb);
+                self.exigir_tipo(r, tr.as_ref().map(sem_option).cloned(), &Tipo::Number, simb);
+                Some(Tipo::Bool)
+            }
+            BinOp::Eq | BinOp::Neq => {
+                if let (Some(a), Some(b)) = (&tl, &tr) {
+                    if !comparaveis(a, b) {
+                        let span = Span { start: l.span.start, end: r.span.end };
+                        self.erro(span, format!("não é possível comparar {} com {} usando `{}`", a, b, simb));
+                    }
+                }
+                Some(Tipo::Bool)
+            }
+        }
+    }
+
+    fn exigir_tipo(&mut self, e: &Expr, t: Option<Tipo>, esperado: &Tipo, simb: &str) {
+        if let Some(t) = t {
+            if t != *esperado {
+                self.erro(e.span, format!("`{}` espera {}, encontrado {}", simb, esperado, t));
+            }
+        }
+    }
+
+    // G.short_dist(a, b) -> Number;  G.filter(...) -> Grafo.
+    // Reaproveita o checar_consulta (nós existem, filter percorre o próprio grafo, condição é Bool).
+    fn tipo_consulta(&mut self, e: &Expr) -> Option<Tipo> {
+        let Some(c) = e.como_consulta() else {
+            self.erro(e.span, "uma consulta deve começar pelo nome de um grafo: `G.short_dist(a, b)`");
+            return None;
+        };
+        let erros_antes = self.erros.len();
+        self.checar_consulta(&c);
+        if self.erros.len() > erros_antes {
+            return None;
+        }
+        match c.chamadas.last() {
+            Some(Chamada::ShortDist { .. }) => Some(Tipo::Number),
+            Some(Chamada::Filter { .. }) => Some(Tipo::Grafo),
+            _ => None,
+        }
+    }
+
     // ========== consultas
 
     fn checar_consulta(&mut self, c: &ExpressaoConsulta) {
@@ -437,6 +580,10 @@ impl Tipador<'_> {
                 Some(esperado)
             }
             ExprKind::Binario(l, op, r) => self.binario(l, *op, r),
+            ExprKind::Consulta(_, _) => {
+                self.erro(e.span, "consultas não são permitidas dentro de uma condição de filter");
+                None
+            }
         }
     }
 
@@ -558,6 +705,7 @@ impl Tipador<'_> {
 fn comparaveis(a: &Tipo, b: &Tipo) -> bool {
     match (sem_option(a), sem_option(b)) {
         (Tipo::Aresta, _) | (_, Tipo::Aresta) => false,
+        (Tipo::Grafo, _) | (_, Tipo::Grafo) => false,
         (Tipo::No, Tipo::String) | (Tipo::String, Tipo::No) => true,
         (x, y) => x == y,
     }

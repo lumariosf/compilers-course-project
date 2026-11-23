@@ -28,6 +28,10 @@ pub enum Token {
     False,
     #[token("NodeType")]
     NodeType,
+    #[token("let")]
+    Let,
+    #[token("print")]
+    Print,
 
     // consultas
     #[token("short_dist")]

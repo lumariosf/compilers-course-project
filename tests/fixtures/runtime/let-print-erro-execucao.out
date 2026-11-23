@@ -1,0 +1,5 @@
+exit=1
+stdout:
+antes do erro
+stderr:
+tests/fixtures/runtime/let-print-erro-execucao.graph:8:11: erro de execução: divisão por zero

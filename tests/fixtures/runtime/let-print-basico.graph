@@ -1,0 +1,11 @@
+Graph G {
+    Node = {a, b, c}
+    Edge = { a -> b : 2, b -> c : 3, a -> c : 10 }
+}
+
+let dist = G.short_dist(a, c);
+let dobro = dist * 2;
+print(dist);
+print("distância dobrada:", dobro);
+print(dist > 4 and not (dobro == 0));
+print(G.filter(for e in G | e.weight >= 3));
