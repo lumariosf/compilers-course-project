@@ -135,6 +135,28 @@ pub enum ResultadoConsulta {
         grafo: String,
         arestas: Vec<ArestaRuntime>,
     },
+    // G.short_path(a, b): as arestas do menor caminho, na ordem em que são percorridas
+    Caminho {
+        grafo: String,
+        arestas: Vec<ArestaRuntime>,
+    },
+    // Resultado de G.connected(a, b)
+    Booleano(bool),
+}
+
+// Uma aresta por linha; lista vazia aparece como `[]`
+fn formatar_arestas(f: &mut fmt::Formatter<'_>, arestas: &[ArestaRuntime]) -> fmt::Result {
+    if arestas.is_empty() {
+        return write!(f, "[]");
+    }
+    for (i, a) in arestas.iter().enumerate() {
+        if i + 1 == arestas.len() {
+            write!(f, "{}", a)?;
+        } else {
+            writeln!(f, "{}", a)?;
+        }
+    }
+    Ok(())
 }
 
 impl fmt::Display for ResultadoConsulta {
@@ -147,20 +169,9 @@ impl fmt::Display for ResultadoConsulta {
                     write!(f, "{}", distancia)
                 }
             }
-            ResultadoConsulta::Filtro { arestas, .. } => {
-                if arestas.is_empty() {
-                    write!(f, "[]")
-                } else {
-                    for (i, a) in arestas.iter().enumerate() {
-                        if i + 1 == arestas.len() {
-                            write!(f, "{}", a)?;
-                        } else {
-                            writeln!(f, "{}", a)?;
-                        }
-                    }
-                    Ok(())
-                }
-            }
+            ResultadoConsulta::Filtro { arestas, .. } => formatar_arestas(f, arestas),
+            ResultadoConsulta::Caminho { arestas, .. } => formatar_arestas(f, arestas),
+            ResultadoConsulta::Booleano(b) => write!(f, "{}", if *b { "True" } else { "False" }),
         }
     }
 }
@@ -182,7 +193,7 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
                 grafos_usados.insert(m.g1.name.clone());
                 grafos_usados.insert(m.g2.name.clone());
             }
-            Item::Consulta(_) | Item::Let(_) | Item::Print(_) => {
+            Item::Consulta(_) | Item::Let(_) | Item::Print(_) | Item::Fn(_) => {
                 for c in consultas_do_item(item) {
                     grafos_usados.insert(c.grafo.name.clone());
                     for chamada in &c.chamadas {
@@ -240,9 +251,17 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
             for outro in programa {
                 for c in consultas_do_item(outro) {
                     for chamada in &c.chamadas {
-                        if let Chamada::ShortDist { origem, destino } = chamada {
-                            nos_usados.insert(origem.name.clone());
-                            nos_usados.insert(destino.name.clone());
+                        match chamada {
+                            Chamada::ShortDist { origem, destino } => {
+                                nos_usados.insert(origem.name.clone());
+                                nos_usados.insert(destino.name.clone());
+                            }
+                            Chamada::Nativa { args, .. } => {
+                                for no in args {
+                                    nos_usados.insert(no.name.clone());
+                                }
+                            }
+                            _ => {}
                         }
                     }
                 }
@@ -296,6 +315,7 @@ fn consultas_do_item(item: &Item) -> Vec<ExpressaoConsulta> {
                 coletar_consultas(arg, &mut saida);
             }
         }
+        Item::Fn(f) => coletar_consultas(&f.corpo, &mut saida),
         Item::Grafo(_) | Item::GrafoMerge(_) => {}
     }
     saida
@@ -315,6 +335,16 @@ fn coletar_consultas(expr: &Expr, saida: &mut Vec<ExpressaoConsulta>) {
             coletar_consultas(l, saida);
             coletar_consultas(r, saida);
         }
+        ExprKind::ChamadaFuncao(_, args) => {
+            for a in args {
+                coletar_consultas(a, saida);
+            }
+        }
+        ExprKind::Se(c, a, b) => {
+            coletar_consultas(c, saida);
+            coletar_consultas(a, saida);
+            coletar_consultas(b, saida);
+        }
         ExprKind::Numero(_) | ExprKind::Texto(_) | ExprKind::Bool(_) | ExprKind::Identificador(_) => {}
     }
 }
@@ -327,6 +357,8 @@ fn expr_utiliza_var(expr: &Expr, var: &str) -> bool {
         ExprKind::Binario(l, _, r) => expr_utiliza_var(l, var) || expr_utiliza_var(r, var),
         ExprKind::Numero(_) | ExprKind::Texto(_) | ExprKind::Bool(_) => false,
         ExprKind::Consulta(_, _) => false,
+        ExprKind::ChamadaFuncao(_, args) => args.iter().any(|a| expr_utiliza_var(a, var)),
+        ExprKind::Se(c, a, b) => expr_utiliza_var(c, var) || expr_utiliza_var(a, var) || expr_utiliza_var(b, var),
     }
 }
 
@@ -334,7 +366,11 @@ fn expr_utiliza_var(expr: &Expr, var: &str) -> bool {
 pub struct Interpretador {
     grafos: HashMap<String, GrafoRuntime>,
     variaveis: HashMap<String, Valor>,   // `let` (imutáveis: cada nome é gravado uma única vez)
+    funcoes: HashMap<String, FnDecl>,    // `func` declaradas até agora
 }
+
+// Profundidade máxima de chamadas de função aninhadas (evita estourar a pilha em recursão infinita)
+const LIMITE_RECURSAO: usize = 1000;
 
 impl Default for Interpretador {
     fn default() -> Self {
@@ -347,6 +383,7 @@ impl Interpretador {
         Interpretador {
             grafos: HashMap::new(),
             variaveis: HashMap::new(),
+            funcoes: HashMap::new(),
         }
     }
 
@@ -381,43 +418,59 @@ impl Interpretador {
                 Ok(Some(res))
             }
             Item::Let(l) => {
-                let valor = self.avaliar_topo(&l.valor)?;
+                let valor = self.avaliar_topo(&l.valor, None, 0)?;
                 self.variaveis.insert(l.nome.name.clone(), valor);
                 Ok(None)
             }
             Item::Print(p) => {
                 let mut partes: Vec<String> = Vec::new();
                 for arg in &p.args {
-                    let valor = self.avaliar_topo(arg)?;
+                    let valor = self.avaliar_topo(arg, None, 0)?;
                     partes.push(formatar_para_print(&valor));
                 }
                 println!("{}", partes.join(" "));
                 Ok(None)
             }
+            Item::Fn(f) => {
+                self.funcoes.insert(f.nome.name.clone(), f.clone());
+                Ok(None)
+            }
         }
     }
 
-    // Avalia uma expressão fora do filter: enxerga variáveis do `let` e executa consultas.
+    // Avalia uma expressão fora do filter. `locais` = parâmetros da função em execução:
+    // dentro de uma função só os parâmetros são visíveis; fora (None) valem as variáveis do `let`.
     // G.short_dist(...) vira Numero; G.filter(...) vira Valor::Consulta (lista de arestas).
-    fn avaliar_topo(&self, expr: &Expr) -> Result<Valor, ErroExecucao> {
+    fn avaliar_topo(
+        &self,
+        expr: &Expr,
+        locais: Option<&HashMap<String, Valor>>,
+        prof: usize,
+    ) -> Result<Valor, ErroExecucao> {
         match &expr.kind {
             ExprKind::Numero(n) => Ok(Valor::Numero(*n)),
             ExprKind::Texto(s) => Ok(Valor::Texto(s.clone())),
             ExprKind::Bool(b) => Ok(Valor::Bool(*b)),
-            ExprKind::Identificador(nome) => self.variaveis.get(nome).cloned().ok_or_else(|| {
-                ErroExecucao::new(expr.span, format!("variável `{}` não encontrada", nome))
-            }),
+            ExprKind::Identificador(nome) => {
+                let achado = match locais {
+                    Some(l) => l.get(nome),
+                    None => self.variaveis.get(nome),
+                };
+                achado.cloned().ok_or_else(|| {
+                    ErroExecucao::new(expr.span, format!("variável `{}` não encontrada", nome))
+                })
+            }
             ExprKind::Acesso(_, campo) => Err(ErroExecucao::new(
                 campo.span,
                 "acesso a campo só é permitido dentro de um filter",
             )),
             ExprKind::Unario(op, interno) => {
-                let valor = self.avaliar_topo(interno)?;
+                let valor = self.avaliar_topo(interno, locais, prof)?;
                 aplicar_unario(op, valor, interno.span)
             }
             ExprKind::Binario(l, op, r) => match op {
                 BinOp::And => {
-                    let vl = self.avaliar_topo(l)?;
+                    let vl = self.avaliar_topo(l, locais, prof)?;
                     match vl {
                         Valor::Bool(false) => return Ok(Valor::Bool(false)),
                         Valor::Bool(true) => {}
@@ -428,7 +481,7 @@ impl Interpretador {
                             ))
                         }
                     }
-                    let vr = self.avaliar_topo(r)?;
+                    let vr = self.avaliar_topo(r, locais, prof)?;
                     match vr {
                         Valor::Bool(b) => Ok(Valor::Bool(b)),
                         outro => Err(ErroExecucao::new(
@@ -438,7 +491,7 @@ impl Interpretador {
                     }
                 }
                 BinOp::Or => {
-                    let vl = self.avaliar_topo(l)?;
+                    let vl = self.avaliar_topo(l, locais, prof)?;
                     match vl {
                         Valor::Bool(true) => return Ok(Valor::Bool(true)),
                         Valor::Bool(false) => {}
@@ -449,7 +502,7 @@ impl Interpretador {
                             ))
                         }
                     }
-                    let vr = self.avaliar_topo(r)?;
+                    let vr = self.avaliar_topo(r, locais, prof)?;
                     match vr {
                         Valor::Bool(b) => Ok(Valor::Bool(b)),
                         outro => Err(ErroExecucao::new(
@@ -459,8 +512,8 @@ impl Interpretador {
                     }
                 }
                 _ => {
-                    let vl = self.avaliar_topo(l)?;
-                    let vr = self.avaliar_topo(r)?;
+                    let vl = self.avaliar_topo(l, locais, prof)?;
+                    let vr = self.avaliar_topo(r, locais, prof)?;
                     aplicar_binario(*op, vl, vr, l.span, r.span)
                 }
             },
@@ -471,10 +524,56 @@ impl Interpretador {
                 let resultado = self.executar_consulta(&c)?;
                 Ok(match resultado {
                     ResultadoConsulta::Distancia { distancia, .. } => Valor::Numero(distancia),
+                    ResultadoConsulta::Booleano(b) => Valor::Bool(b),
                     outro => Valor::Consulta(outro),
                 })
             }
+            ExprKind::ChamadaFuncao(nome, args) => {
+                let mut valores = Vec::with_capacity(args.len());
+                for a in args {
+                    valores.push(self.avaliar_topo(a, locais, prof)?);
+                }
+                self.chamar_funcao(nome, valores, expr.span, prof)
+            }
+            ExprKind::Se(cond, entao, senao) => match self.avaliar_topo(cond, locais, prof)? {
+                Valor::Bool(true) => self.avaliar_topo(entao, locais, prof),
+                Valor::Bool(false) => self.avaliar_topo(senao, locais, prof),
+                outro => Err(ErroExecucao::new(
+                    cond.span,
+                    format!("`if` espera Bool, encontrado {}", outro),
+                )),
+            },
         }
+    }
+
+    // Executa `nome(args)`: liga cada parâmetro ao seu argumento e avalia o corpo só com esses nomes
+    fn chamar_funcao(
+        &self,
+        nome: &Ident,
+        args: Vec<Valor>,
+        span: Span,
+        prof: usize,
+    ) -> Result<Valor, ErroExecucao> {
+        if prof >= LIMITE_RECURSAO {
+            return Err(ErroExecucao::new(
+                span,
+                format!("limite de recursão excedido ao chamar `{}` ({} chamadas aninhadas)", nome.name, LIMITE_RECURSAO),
+            ));
+        }
+        let f = self.funcoes.get(&nome.name).ok_or_else(|| {
+            ErroExecucao::new(nome.span, format!("função `{}` não encontrada", nome.name))
+        })?;
+        if f.params.len() != args.len() {
+            return Err(ErroExecucao::new(
+                span,
+                format!("função `{}` espera {} argumento(s), recebeu {}", nome.name, f.params.len(), args.len()),
+            ));
+        }
+        let mut locais: HashMap<String, Valor> = HashMap::new();
+        for (p, v) in f.params.iter().zip(args) {
+            locais.insert(p.name.clone(), v);
+        }
+        self.avaliar_topo(&f.corpo, Some(&locais), prof + 1)
     }
 
     fn executar_grafo(&mut self, g: &Grafo) -> Result<(), ErroExecucao> {
@@ -578,6 +677,7 @@ impl Interpretador {
                             variavel: &filtro.variavel.name,
                             aresta,
                             grafo: &grafo_atual,
+                            interp: self,
                         };
                         let cond = avaliar_expr(&filtro.condicao, Some(&contexto))?;
                         if let Valor::Bool(true) = cond {
@@ -604,6 +704,15 @@ impl Interpretador {
                         distancia: d,
                     });
                 }
+                Chamada::Nativa { nome, args } => {
+                    ultimo_resultado = Some(crate::consults::executar_nativa(
+                        &grafo_atual,
+                        &c.grafo.name,
+                        nome,
+                        args,
+                        c.grafo.span,
+                    )?);
+                }
                 Chamada::Merge { grafo_alvo } => {
                     return Err(ErroExecucao::new(
                         grafo_alvo.span,
@@ -625,6 +734,7 @@ struct ContextoAresta<'a> {
     variavel: &'a str,
     aresta: &'a ArestaRuntime,
     grafo: &'a GrafoRuntime,
+    interp: &'a Interpretador, // para chamar funções `func` dentro da condição
 }
 
 // ========== Avaliação de Expressões
@@ -765,6 +875,24 @@ fn avaliar_expr(expr: &Expr, ctx: Option<&ContextoAresta>) -> Result<Valor, Erro
             expr.span,
             "consultas não são permitidas dentro de uma condição de filter",
         )),
+        ExprKind::ChamadaFuncao(nome, args) => {
+            let c = ctx.ok_or_else(|| {
+                ErroExecucao::new(expr.span, "chamada de função fora do contexto de filtro")
+            })?;
+            let mut valores = Vec::with_capacity(args.len());
+            for a in args {
+                valores.push(avaliar_expr(a, ctx)?);
+            }
+            c.interp.chamar_funcao(nome, valores, expr.span, 0)
+        }
+        ExprKind::Se(cond, entao, senao) => match avaliar_expr(cond, ctx)? {
+            Valor::Bool(true) => avaliar_expr(entao, ctx),
+            Valor::Bool(false) => avaliar_expr(senao, ctx),
+            outro => Err(ErroExecucao::new(
+                cond.span,
+                format!("`if` espera Bool, encontrado {}", outro),
+            )),
+        },
     }
 }
 
@@ -911,12 +1039,26 @@ impl PartialOrd for EstadoDijkstra<'_> {
     }
 }
 
+// Distância mínima (Dijkstra). A lista de arestas do caminho vem de `calcular_caminho_minimo`.
 pub fn calcular_short_dist(
     grafo: &GrafoRuntime,
     origem: &str,
     destino: &str,
     span: Span,
 ) -> Result<f64, ErroExecucao> {
+    calcular_caminho_minimo(grafo, origem, destino, span).map(|(distancia, _)| distancia)
+}
+
+// Dijkstra que também guarda, para cada nó, de qual nó e por qual aresta o caminho mínimo chegou
+// nele ("anterior"). Depois é só andar de trás para frente a partir do destino.
+// As arestas voltam na ordem do caminho e orientadas no sentido percorrido (uma `--` percorrida de
+// b para a aparece como `b -- a`).
+pub fn calcular_caminho_minimo(
+    grafo: &GrafoRuntime,
+    origem: &str,
+    destino: &str,
+    span: Span,
+) -> Result<(f64, Vec<ArestaRuntime>), ErroExecucao> {
     if !grafo.nos.contains_key(origem) {
         return Err(ErroExecucao::new(
             span,
@@ -931,24 +1073,25 @@ pub fn calcular_short_dist(
     }
 
     if origem == destino {
-        return Ok(0.0);
+        return Ok((0.0, Vec::new()));
     }
 
-    // Monta lista de adjacência
-    let mut adj: HashMap<&str, Vec<(&str, f64)>> = HashMap::new();
+    // Monta lista de adjacência: (vizinho, peso, aresta original)
+    let mut adj: HashMap<&str, Vec<(&str, f64, &ArestaRuntime)>> = HashMap::new();
     for no in grafo.nos.keys() {
         adj.insert(no.as_str(), Vec::new());
     }
 
     for a in &grafo.arestas {
-        adj.entry(&a.origem).or_default().push((&a.destino, a.peso));
+        adj.entry(&a.origem).or_default().push((&a.destino, a.peso, a));
         if a.tipo == TipoAresta::NaoDirecionada {
-            adj.entry(&a.destino).or_default().push((&a.origem, a.peso));
+            adj.entry(&a.destino).or_default().push((&a.origem, a.peso, a));
         }
     }
 
     let mut distancias: HashMap<&str, f64> = HashMap::new();
     distancias.insert(origem, 0.0);
+    let mut anterior: HashMap<&str, (&str, &ArestaRuntime)> = HashMap::new();
 
     let mut heap = BinaryHeap::new();
     heap.push(EstadoDijkstra {
@@ -958,7 +1101,7 @@ pub fn calcular_short_dist(
 
     while let Some(EstadoDijkstra { custo, no }) = heap.pop() {
         if no == destino {
-            return Ok(custo);
+            return Ok((custo, reconstruir_caminho(&anterior, origem, destino)));
         }
 
         if let Some(&d) = distancias.get(no) {
@@ -968,12 +1111,13 @@ pub fn calcular_short_dist(
         }
 
         if let Some(vizinhos) = adj.get(no) {
-            for &(vizinho, peso) in vizinhos {
+            for &(vizinho, peso, aresta) in vizinhos {
                 let proximo_custo = custo + peso;
                 let menor_atual = distancias.get(vizinho).copied().unwrap_or(f64::INFINITY);
 
                 if proximo_custo < menor_atual {
                     distancias.insert(vizinho, proximo_custo);
+                    anterior.insert(vizinho, (no, aresta));
                     heap.push(EstadoDijkstra {
                         custo: proximo_custo,
                         no: vizinho,
@@ -982,16 +1126,16 @@ pub fn calcular_short_dist(
             }
         }
     }
-    
+
     if let Some(a) = grafo.arestas.iter().find(|a| a.peso < 0.0) {
-    return Err(ErroExecucao::new(
-        span,
-        format!(
-            "`short_dist` não aceita pesos negativos (aresta `{}` no grafo `{}`)",
-            a, grafo.nome
-        ),
-    ));
-}
+        return Err(ErroExecucao::new(
+            span,
+            format!(
+                "`short_dist` não aceita pesos negativos (aresta `{}` no grafo `{}`)",
+                a, grafo.nome
+            ),
+        ));
+    }
 
     Err(ErroExecucao::new(
         span,
@@ -1000,6 +1144,27 @@ pub fn calcular_short_dist(
             origem, destino, grafo.nome
         ),
     ))
+}
+
+fn reconstruir_caminho<'a>(
+    anterior: &HashMap<&'a str, (&'a str, &'a ArestaRuntime)>,
+    origem: &str,
+    destino: &'a str,
+) -> Vec<ArestaRuntime> {
+    let mut caminho = Vec::new();
+    let mut atual = destino;
+    while atual != origem {
+        let Some(&(pai, aresta)) = anterior.get(atual) else { break };
+        caminho.push(ArestaRuntime {
+            origem: pai.to_string(),
+            destino: atual.to_string(),
+            tipo: aresta.tipo.clone(),
+            peso: aresta.peso,
+        });
+        atual = pai;
+    }
+    caminho.reverse();
+    caminho
 }
 
 #[cfg(test)]
@@ -1216,5 +1381,60 @@ mod tests {
         assert!(msgs.iter().any(|m| m.contains("grafo `H` declarado mas não utilizado")));
         assert!(msgs.iter().any(|m| m.contains("nó `isolado` no grafo `G` declarado mas não utilizado")));
         assert!(msgs.iter().any(|m| m.contains("variável `e` no filtro de `G` declarada mas não utilizada")));
+    }
+    #[test]
+    fn funcoes_simples_e_recursivas() {
+        let prog = r#"
+            func dobro(x) = x * 2;
+            func soma(a, b) = a + b;
+            func fat(n) = if n <= 1 then 1 else n * fat(n - 1);
+            func mdc(a, b) = if b == 0 then a else mdc(b, a % b);
+            let r = soma(dobro(3), fat(5));
+            let m = mdc(48, 18);
+        "#;
+        let (interp, _) = interpretar(prog).expect("deveria executar");
+        assert_eq!(interp.variaveis["r"], Valor::Numero(126.0));
+        assert_eq!(interp.variaveis["m"], Valor::Numero(6.0));
+    }
+
+    #[test]
+    fn funcao_enxerga_so_os_parametros() {
+        // `k` é um `let` de fora: o checker recusa o uso dentro do corpo
+        let erro = interpretar("let k = 1;\nfunc f(x) = x + k;").unwrap_err();
+        assert!(erro.contains("variável `k` não declarada"), "{}", erro);
+    }
+
+    #[test]
+    fn funcao_dentro_do_filter_e_com_consulta() {
+        let prog = r#"
+            Graph G {
+                Node = {a, b, c}
+                Edge = { a -> b : 2, b -> c : 5 }
+            }
+            func dobro(x) = x * 2;
+            func dist_ac() = G.short_dist(a, c);
+            G.filter(for e in G | dobro(e.weight) > 6)
+            let d = dist_ac();
+        "#;
+        let (interp, res) = interpretar(prog).expect("deveria executar");
+        match &res[0] {
+            ResultadoConsulta::Filtro { arestas, .. } => {
+                assert_eq!(arestas.len(), 1);
+                assert_eq!(arestas[0].origem, "b");
+            }
+            _ => panic!("esperava Filtro"),
+        }
+        assert_eq!(interp.variaveis["d"], Valor::Numero(7.0));
+    }
+
+    #[test]
+    fn recursao_infinita_da_erro_em_vez_de_estourar_a_pilha() {
+        // thread com pilha grande, como no main: as threads de teste têm só 2 MB
+        let filho = std::thread::Builder::new()
+            .stack_size(256 * 1024 * 1024)
+            .spawn(|| interpretar("func inf(n) = inf(n + 1);\nlet x = inf(0);").map(|_| ()))
+            .unwrap();
+        let erro = filho.join().unwrap().unwrap_err();
+        assert!(erro.contains("limite de recursão"), "{}", erro);
     }
 }

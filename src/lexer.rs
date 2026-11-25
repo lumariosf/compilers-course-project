@@ -32,6 +32,14 @@ pub enum Token {
     Let,
     #[token("print")]
     Print,
+    #[token("func")]
+    Func,
+    #[token("if")]
+    If,
+    #[token("then")]
+    Then,
+    #[token("else")]
+    Else,
 
     // consultas
     #[token("short_dist")]

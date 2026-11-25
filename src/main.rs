@@ -1,5 +1,6 @@
 mod ast;
 mod checker;
+mod consults;
 mod interpreter;
 mod lexer;
 mod types;
@@ -10,6 +11,18 @@ use std::fs;
 
 
 fn main() {
+    // As funções `func` podem recursar até 1000 chamadas aninhadas: roda numa thread com pilha grande
+    // para o interpretador não estourar a pilha padrão (8 MB na main, 2 MB nas threads de teste).
+    let filho = std::thread::Builder::new()
+        .stack_size(256 * 1024 * 1024)
+        .spawn(run)
+        .expect("não foi possível criar a thread do interpretador");
+    if filho.join().is_err() {
+        std::process::exit(101);
+    }
+}
+
+fn run() {
     let args: Vec<String> = env::args().collect();
     let mostrar_ast = args.iter().any(|a| a == "--ast");
    

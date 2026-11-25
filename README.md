@@ -311,6 +311,69 @@ Para rodar todos os exemplos do interpretador:
 for f in examples/interpretador_*.graph; do echo "== $f"; cargo run -q -- "$f"; done
 ```
 
+### 10. Variáveis e `print`
+
+`let` guarda o valor de uma expressão (inclusive o resultado de uma consulta) num nome. Variáveis são **imutáveis**: cada nome é declarado uma única vez. `print` escreve os valores separados por espaço (textos sem aspas).
+
+```bash
+let dist = G.short_dist(a, c);
+print("distância:", dist, dist > 4);
+```
+
+### 11. Funções
+
+Uma função é declarada com `func`, tem nome e é inspirada no cálculo lambda (`func dobro(x) = x * 2;` equivale a `dobro = λx. x * 2`, mas com nome):
+
+```bash
+func dobro(x) = x * 2;
+func soma(a, b) = a + b;
+func fat(n) = if n <= 1 then 1 else n * fat(n - 1);
+
+print(soma(dobro(3), fat(5)));     # 126
+```
+
+Regras:
+
+- Parâmetros e resultado são sempre `Number` (em GRAPH todo número é `f64`; valores inteiros são mostrados sem casa decimal). O corpo deve ser `Number`.
+- `if cond then a else b` é uma **expressão**; o `else` é obrigatório e os dois ramos precisam ter o mesmo tipo. Como `if` é a expressão de mais baixa precedência, dentro de um operador use parênteses: `1 + (if c then 2 else 3)`.
+- A função pode chamar a si mesma (recursão), mas só funções **já declaradas** podem ser chamadas (não há recursão mútua). A recursão é limitada a 1000 chamadas aninhadas; passar disso é erro de execução.
+- O corpo só enxerga os **parâmetros**: não enxerga variáveis `let` de fora. Pode conter consultas (`func dist_ac() = G.short_dist(a, c);`).
+- Funções podem ser usadas dentro da condição de um `filter`: `G.filter(for e in G | custo(e.weight) > 10)`.
+- Erros em tempo de compilação: função não declarada ou repetida, número errado de argumentos, argumento que não é `Number`, parâmetro repetido, corpo que não é `Number`, `if` com condição que não é `Bool` ou ramos de tipos diferentes.
+
+### 12. Funções nativas de grafo
+
+Além de `short_dist` e `filter`, há duas consultas que rodam um algoritmo sobre o grafo. Os argumentos são nomes de nós, como em `short_dist`, e nós inexistentes são rejeitados em tempo de compilação.
+
+| Consulta | Algoritmo | Resultado |
+|----------|-----------|-----------|
+| `G.short_path(a, b)` | Dijkstra guardando o nó anterior | lista das **arestas** do menor caminho, na ordem percorrida (`[]` se `a == b`); erro de execução se não houver caminho |
+| `G.connected(a, b)` | BFS | `Bool`: existe caminho de `a` até `b`? (nunca dá erro) |
+
+`short_path` mostra o caminho que `short_dist` mede. Uma aresta `--` percorrida no sentido contrário aparece orientada no sentido do caminho:
+
+```bash
+Rede.short_dist(a, e)     # 10
+Rede.short_path(a, e)     # a -> b : 2
+                          # b -> c : 3
+                          # c -- d : 1
+                          # d -> e : 4
+```
+
+`connected` combina bem com `if`: `if G.connected(a, b) then G.short_dist(a, b) else -1`.
+
+As nativas ficam em `src/consults.rs`. Para criar uma nova basta acrescentar a assinatura em `assinatura()`, o nome em `NOMES` e um braço em `executar_nativa()`: gramática e checker não mudam.
+
+#### Exemplos da 3ª entrega
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `funcoes_1_basico.graph` | funções, composição e `if/then/else` |
+| `funcoes_2_recursao_e_grafos.graph` | recursão (fatorial, Fibonacci, mdc) e funções no `filter` |
+| `interpretador_5_short_path.graph` | lista de arestas do menor caminho |
+| `interpretador_6_connected.graph` | `connected` e seu uso com `if` |
+| `semantica_7_erro_funcoes.graph` | 11 erros de funções, `if` e nativas |
+
 ## Como rodar os testes
 
 Execute a suíte completa na raiz do repositório:
@@ -344,6 +407,6 @@ Ao adicionar um caso, coloque o `.graph` na pasta que representa a fase testada 
 
 Esse comando executa o compilador atual e atualiza os `.out`; revise as mensagens, o código de saída e a saída do programa antes de manter as alterações. A execução normal de `make test` nunca modifica snapshots.
 
-A linguagem GRAPH deste projeto não possui funções, retornos, escopo de variáveis, recursão nem comandos de laço/condicional; esses casos não se aplicam. Os casos cobrem as declarações de grafo, `NodeType`, merges, `filter`, `short_dist`, precedência de expressões e erros suportados pelo checker e interpretador.
+A linguagem GRAPH não possui comandos de laço nem `if` como comando (só como expressão); esses casos não se aplicam. Os casos cobrem as declarações de grafo, `NodeType`, merges, `filter`, `short_dist`, precedência de expressões e erros suportados pelo checker e interpretador.
 
 

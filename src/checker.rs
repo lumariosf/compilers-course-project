@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::ast::*;
+use crate::consults;
 use crate::types::{resolver_tipo, ErroSemantico, Tipo};
 
 // O que o checker sabe sobre um grafo já declarado
@@ -40,6 +41,8 @@ pub struct Checker {
     variaveis: HashMap<String, Tipo>,
     // `let` cujo valor tinha erro: usos posteriores não geram erro em cascata
     variaveis_invalidas: HashSet<String>,
+    // Funções `func` declaradas até aqui e a quantidade de parâmetros (tudo é Number)
+    funcoes: HashMap<String, usize>,
     erros: Vec<ErroSemantico>,
 }
 
@@ -64,6 +67,7 @@ impl Checker {
             incompletos: HashSet::new(),
             variaveis: HashMap::new(),
             variaveis_invalidas: HashSet::new(),
+            funcoes: HashMap::new(),
             erros: Vec::new(),
         }
     }
@@ -79,6 +83,7 @@ impl Checker {
             Item::Consulta(c) => self.checar_consulta(c),
             Item::Let(l) => self.checar_let(l),
             Item::Print(p) => self.checar_print(p),
+            Item::Fn(f) => self.checar_fn(f),
         }
     }
 
@@ -359,6 +364,10 @@ impl Checker {
             self.erro(l.nome.span, format!("`{}` já é o nome de um grafo", nome));
             return;
         }
+        if self.funcoes.contains_key(nome) {
+            self.erro(l.nome.span, format!("`{}` já é o nome de uma função", nome));
+            return;
+        }
         if self.variaveis.contains_key(nome) || self.variaveis_invalidas.contains(nome) {
             self.erro(l.nome.span, format!("variável `{}` já declarada (variáveis são imutáveis)", nome));
             return;
@@ -369,6 +378,51 @@ impl Checker {
             }
             None => {
                 self.variaveis_invalidas.insert(nome.clone());
+            }
+        }
+    }
+
+    // func nome(a, b) = corpo;  — parâmetros e resultado são Number.
+    // O corpo só enxerga os parâmetros (não enxerga `let` de fora) e a própria função (recursão).
+    fn checar_fn(&mut self, f: &FnDecl) {
+        let nome = &f.nome.name;
+        let mut valida = true;
+        if self.grafos.contains_key(nome) {
+            self.erro(f.nome.span, format!("`{}` já é o nome de um grafo", nome));
+            valida = false;
+        } else if self.funcoes.contains_key(nome) {
+            self.erro(f.nome.span, format!("função `{}` já declarada", nome));
+            valida = false;
+        } else if self.variaveis.contains_key(nome) || self.variaveis_invalidas.contains(nome) {
+            self.erro(f.nome.span, format!("`{}` já é o nome de uma variável", nome));
+            valida = false;
+        }
+
+        // Registrada ANTES de checar o corpo, para permitir recursão
+        if valida {
+            self.funcoes.insert(nome.clone(), f.params.len());
+        }
+
+        // Dentro do corpo valem só os parâmetros: guardamos as variáveis de fora e restauramos depois
+        let externas = std::mem::take(&mut self.variaveis);
+        let externas_invalidas = std::mem::take(&mut self.variaveis_invalidas);
+        for p in &f.params {
+            if self.variaveis.contains_key(&p.name) {
+                self.erro(p.span, format!("parâmetro `{}` repetido em `{}`", p.name, nome));
+            } else {
+                self.variaveis.insert(p.name.clone(), Tipo::Number);
+            }
+        }
+        let tipo_corpo = self.tipo_expr(&f.corpo);
+        self.variaveis = externas;
+        self.variaveis_invalidas = externas_invalidas;
+
+        if let Some(t) = tipo_corpo {
+            if t != Tipo::Number {
+                self.erro(
+                    f.corpo.span,
+                    format!("o corpo da função `{}` deve ser Number, encontrado {}", nome, t),
+                );
             }
         }
     }
@@ -392,7 +446,9 @@ impl Checker {
                 if self.variaveis_invalidas.contains(x) {
                     return None;
                 }
-                if self.grafos.contains_key(x) {
+                if self.funcoes.contains_key(x) {
+                    self.erro(e.span, format!("`{}` é uma função: chame-a como `{}(...)`", x, x));
+                } else if self.grafos.contains_key(x) {
                     self.erro(
                         e.span,
                         format!("`{}` é um grafo: use `{}.short_dist(...)` ou `{}.filter(...)`", x, x, x),
@@ -417,6 +473,48 @@ impl Checker {
             }
             ExprKind::Binario(l, op, r) => self.tipo_binario(l, *op, r),
             ExprKind::Consulta(_, _) => self.tipo_consulta(e),
+            ExprKind::ChamadaFuncao(nome, args) => {
+                let tipos: Vec<Option<Tipo>> = args.iter().map(|a| self.tipo_expr(a)).collect();
+                let aridade = match self.funcoes.get(&nome.name) {
+                    Some(&n) => n,
+                    None => {
+                        self.erro(nome.span, format!("função `{}` não declarada", nome.name));
+                        return None;
+                    }
+                };
+                if aridade != args.len() {
+                    self.erro(
+                        e.span,
+                        format!("função `{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
+                    );
+                    return Some(Tipo::Number);
+                }
+                for (i, (arg, t)) in args.iter().zip(tipos).enumerate() {
+                    if let Some(t) = t {
+                        if t != Tipo::Number {
+                            self.erro(
+                                arg.span,
+                                format!("argumento {} de `{}` espera Number, encontrado {}", i + 1, nome.name, t),
+                            );
+                        }
+                    }
+                }
+                Some(Tipo::Number)
+            }
+            ExprKind::Se(cond, entao, senao) => {
+                let tc = self.tipo_expr(cond);
+                self.exigir_tipo(cond, tc, &Tipo::Bool, "if");
+                let ta = self.tipo_expr(entao);
+                let tb = self.tipo_expr(senao);
+                match (ta, tb) {
+                    (Some(a), Some(b)) if a == b => Some(a),
+                    (Some(a), Some(b)) => {
+                        self.erro(e.span, format!("os dois ramos do `if` devem ter o mesmo tipo: {} e {}", a, b));
+                        None
+                    }
+                    _ => None,
+                }
+            }
         }
     }
 
@@ -475,6 +573,7 @@ impl Checker {
         match c.chamadas.last() {
             Some(Chamada::ShortDist { .. }) => Some(Tipo::Number),
             Some(Chamada::Filter { .. }) => Some(Tipo::Grafo),
+            Some(Chamada::Nativa { nome, .. }) => consults::assinatura(&nome.name).map(|(_, t)| t),
             _ => None,
         }
     }
@@ -489,6 +588,7 @@ impl Checker {
             self.erro(c.grafo.span, format!("grafo `{}` não declarado", c.grafo.name));
             return;
         };
+        let funcoes = &self.funcoes;
         let erros = &mut self.erros;
 
         // filter só remove arestas: toda chamada encadeada vê os mesmos nós do grafo original
@@ -515,7 +615,12 @@ impl Checker {
                             ),
                         ));
                     }
-                    let mut tipador = Tipador { variavel: &filtro.variavel.name, grafo: info, erros: &mut *erros };
+                    let mut tipador = Tipador {
+                        variavel: &filtro.variavel.name,
+                        grafo: info,
+                        funcoes,
+                        erros: &mut *erros,
+                    };
                     if let Some(t) = tipador.tipo(&filtro.condicao) {
                         if t != Tipo::Bool {
                             erros.push(ErroSemantico::new(
@@ -525,6 +630,32 @@ impl Checker {
                         }
                     }
                 }
+                Chamada::Nativa { nome, args } => match consults::assinatura(&nome.name) {
+                    None => erros.push(ErroSemantico::new(
+                        nome.span,
+                        format!(
+                            "função nativa `{}` desconhecida (disponíveis: short_dist, filter, {})",
+                            nome.name,
+                            consults::NOMES.join(", ")
+                        ),
+                    )),
+                    Some((aridade, _)) => {
+                        if args.len() != aridade {
+                            erros.push(ErroSemantico::new(
+                                nome.span,
+                                format!("`{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
+                            ));
+                        }
+                        for no in args {
+                            if !info.nos.contains_key(&no.name) {
+                                erros.push(ErroSemantico::new(
+                                    no.span,
+                                    format!("nó `{}` não existe em `{}`", no.name, c.grafo.name),
+                                ));
+                            }
+                        }
+                    }
+                },
                 // Resto da sintaxe antiga `G2.merge(G1)`: nenhuma regra da gramática gera esta chamada
                 Chamada::Merge { grafo_alvo } => erros.push(ErroSemantico::new(
                     grafo_alvo.span,
@@ -541,6 +672,7 @@ impl Checker {
 struct Tipador<'a> {
     variavel: &'a str,
     grafo: &'a InfoGrafo,
+    funcoes: &'a HashMap<String, usize>,
     erros: &'a mut Vec<ErroSemantico>,
 }
 
@@ -583,6 +715,49 @@ impl Tipador<'_> {
             ExprKind::Consulta(_, _) => {
                 self.erro(e.span, "consultas não são permitidas dentro de uma condição de filter");
                 None
+            }
+            // Funções `func` podem ser usadas no filter: `e.weight` é Number, então `dobro(e.weight) > 10` é válido
+            ExprKind::ChamadaFuncao(nome, args) => {
+                let tipos: Vec<Option<Tipo>> = args.iter().map(|a| self.tipo(a)).collect();
+                let aridade = match self.funcoes.get(&nome.name) {
+                    Some(&n) => n,
+                    None => {
+                        self.erro(nome.span, format!("função `{}` não declarada", nome.name));
+                        return None;
+                    }
+                };
+                if aridade != args.len() {
+                    self.erro(
+                        e.span,
+                        format!("função `{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
+                    );
+                    return Some(Tipo::Number);
+                }
+                for (i, (arg, t)) in args.iter().zip(tipos).enumerate() {
+                    if let Some(t) = t {
+                        if t != Tipo::Number {
+                            self.erro(
+                                arg.span,
+                                format!("argumento {} de `{}` espera Number, encontrado {}", i + 1, nome.name, t),
+                            );
+                        }
+                    }
+                }
+                Some(Tipo::Number)
+            }
+            ExprKind::Se(cond, entao, senao) => {
+                let tc = self.tipo(cond);
+                self.exigir(cond, tc, &Tipo::Bool, "if");
+                let ta = self.tipo(entao);
+                let tb = self.tipo(senao);
+                match (ta, tb) {
+                    (Some(a), Some(b)) if a == b => Some(a),
+                    (Some(a), Some(b)) => {
+                        self.erro(e.span, format!("os dois ramos do `if` devem ter o mesmo tipo: {} e {}", a, b));
+                        None
+                    }
+                    _ => None,
+                }
             }
         }
     }
@@ -884,5 +1059,39 @@ mod tests {
             "Graph G { NodeType P { x: Number }\n Node = a : P { x: 1 }\n Node = b }\nG.filter(for e in G | e.origin.x > 1)",
             "nó `b` não tem NodeType",
         );
+    }
+    #[test]
+    fn funcoes() {
+        assert!(erros("func dobro(x) = x * 2;\nlet y = dobro(3);\nprint(y);").is_empty());
+        assert!(erros("func fat(n) = if n <= 1 then 1 else n * fat(n - 1);").is_empty());
+        um_erro("func f(x) = g(x);", "função `g` não declarada");
+        um_erro("func f(x) = x;\nfunc f(y) = y;", "função `f` já declarada");
+        um_erro("func f(x, x) = x;", "parâmetro `x` repetido");
+        um_erro("func f(x) = y;", "variável `y` não declarada");
+        um_erro("func f(x) = x > 1;", "deve ser Number, encontrado Bool");
+        um_erro("func f(x) = x;\nlet a = f(1, 2);", "espera 1 argumento(s), recebeu 2");
+        um_erro("func f(x) = x;\nlet a = f(True);", "argumento 1 de `f` espera Number");
+        um_erro("let k = 1;\nfunc f(x) = k;", "variável `k` não declarada");
+        um_erro("func f(x) = if x then 1 else 2;", "`if` espera Bool");
+        um_erro("func f(x) = if x > 0 then 1 else True;", "mesmo tipo");
+    }
+
+    #[test]
+    fn funcoes_no_filtro() {
+        let prog = format!("{}\nfunc dobro(x) = x * 2;\nG.filter(for e in G | dobro(e.weight) > 4)", PESSOAS);
+        assert!(erros(&prog).is_empty());
+        let prog = format!("{}\nG.filter(for e in G | triplo(e.weight) > 4)", PESSOAS);
+        um_erro(&prog, "função `triplo` não declarada");
+    }
+
+    #[test]
+    fn funcoes_nativas() {
+        assert!(erros(&format!("{}\nG.connected(ana, bia)\nG.short_path(ana, bia)", PESSOAS)).is_empty());
+        um_erro(&format!("{}\nG.voar(ana)", PESSOAS), "função nativa `voar` desconhecida");
+        um_erro(&format!("{}\nG.connected(ana)", PESSOAS), "espera 2 argumento(s), recebeu 1");
+        um_erro(&format!("{}\nG.connected(ana, zeca)", PESSOAS), "nó `zeca` não existe");
+        // o tipo do resultado entra na tipagem: connected é Bool
+        assert!(erros(&format!("{}\nlet ok = G.connected(ana, bia);\nprint(if ok then G.short_dist(ana, bia) else 0);", PESSOAS)).is_empty());
+        um_erro(&format!("{}\nlet n = G.short_dist(ana, bia) and True;", PESSOAS), "`and` espera Bool, encontrado Number");
     }
 }

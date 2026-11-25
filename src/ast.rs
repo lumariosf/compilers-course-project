@@ -5,6 +5,17 @@ pub enum Item {
     Consulta(ExpressaoConsulta),
     Let(LetDecl),
     Print(PrintStmt),
+    Fn(FnDecl),
+}
+
+// func nome(p1, p2, ...) = expr;   (função nomeada, inspirada no cálculo lambda: λp1 p2. expr)
+// Parâmetros e resultado são sempre Number. A função pode chamar a si mesma (recursão).
+#[derive(Debug, Clone, PartialEq)]
+pub struct FnDecl {
+    pub nome: Ident,
+    pub params: Vec<Ident>,
+    pub corpo: Expr,
+    pub span: Span,
 }
 
 // let nome = expr;   (imutável: o nome vale sempre o mesmo valor)
@@ -92,6 +103,9 @@ pub enum Chamada {
     ShortDist { origem: Ident, destino: Ident },
     Filter { filtro: Filtro },
     Merge { grafo_alvo: Ident },
+    // Função nativa que roda um algoritmo sobre o grafo: G.short_path(a, b), G.connected(a, b)
+    // As funções existentes e suas assinaturas ficam em consults.rs.
+    Nativa { nome: Ident, args: Vec<Ident> },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -128,6 +142,10 @@ pub enum ExprKind {
     // G.short_dist(a, b), G.filter(...): a chamada vem depois do que está à esquerda (encadeável).
     // A Chamada fica em Box porque o Filtro contém uma Expr (sem Box o tipo teria tamanho infinito).
     Consulta(Box<Expr>, Box<Chamada>),
+    // dobro(x), soma(a, b): chamada de uma função declarada com `func`
+    ChamadaFuncao(Ident, Vec<Expr>),
+    // if cond then a else b  (o `else` é obrigatório, então é sempre uma expressão)
+    Se(Box<Expr>, Box<Expr>, Box<Expr>),
 }
 
 impl Expr {
