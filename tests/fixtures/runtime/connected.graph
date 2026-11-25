@@ -1,0 +1,14 @@
+Graph Rede {
+    Node = {a, b, c, d, e}
+    Edge = { a -> b : 2, b -> c : 3, c -- d : 1 }
+}
+
+Rede.connected(a, d)
+Rede.connected(d, a)
+Rede.connected(d, c)
+Rede.connected(a, e)
+Rede.connected(e, e)
+
+func dobro(x) = x * 2;
+print(if Rede.connected(a, d) then dobro(Rede.short_dist(a, d)) else -1);
+print(if Rede.connected(a, e) then 1 else -1);

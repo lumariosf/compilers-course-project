@@ -1,0 +1,14 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/funcoes-erros.graph:2:6: erro: função `f` já declarada
+tests/fixtures/semantic/funcoes-erros.graph:3:11: erro: parâmetro `x` repetido em `g`
+tests/fixtures/semantic/funcoes-erros.graph:4:13: erro: variável `z` não declarada
+tests/fixtures/semantic/funcoes-erros.graph:5:13: erro: o corpo da função `i` deve ser Number, encontrado Bool
+tests/fixtures/semantic/funcoes-erros.graph:6:13: erro: função `k` não declarada
+tests/fixtures/semantic/funcoes-erros.graph:7:10: erro: função `f` espera 1 argumento(s), recebeu 2
+tests/fixtures/semantic/funcoes-erros.graph:8:12: erro: argumento 1 de `f` espera Number, encontrado Bool
+tests/fixtures/semantic/funcoes-erros.graph:9:10: erro: `if` espera Bool, encontrado Number
+tests/fixtures/semantic/funcoes-erros.graph:10:7: erro: os dois ramos do `if` devem ter o mesmo tipo: Number e Bool
+tests/fixtures/semantic/funcoes-erros.graph:12:17: erro: variável `k` não declarada
+10 erro(s) semântico(s)

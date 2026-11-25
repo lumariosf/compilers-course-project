@@ -1,0 +1,9 @@
+func dobro(x) = x * 2;
+func soma(a, b) = a + b;
+func abs(x) = if x < 0 then -x else x;
+
+print(dobro(21));
+print(soma(dobro(3), 4));
+print(abs(-7), abs(7));
+let r = soma(1, 2) * dobro(5);
+print("r =", r);

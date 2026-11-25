@@ -1,0 +1,727 @@
+exit=0
+stdout:
+[
+    Fn(
+        FnDecl {
+            nome: Ident {
+                name: "dobro",
+                span: Span {
+                    start: 189,
+                    end: 194,
+                },
+            },
+            params: [
+                Ident {
+                    name: "x",
+                    span: Span {
+                        start: 195,
+                        end: 196,
+                    },
+                },
+            ],
+            corpo: Expr {
+                kind: Binario(
+                    Expr {
+                        kind: Identificador(
+                            "x",
+                        ),
+                        span: Span {
+                            start: 200,
+                            end: 201,
+                        },
+                    },
+                    Mul,
+                    Expr {
+                        kind: Numero(
+                            2.0,
+                        ),
+                        span: Span {
+                            start: 204,
+                            end: 205,
+                        },
+                    },
+                ),
+                span: Span {
+                    start: 200,
+                    end: 205,
+                },
+            },
+            span: Span {
+                start: 184,
+                end: 206,
+            },
+        },
+    ),
+    Fn(
+        FnDecl {
+            nome: Ident {
+                name: "soma",
+                span: Span {
+                    start: 212,
+                    end: 216,
+                },
+            },
+            params: [
+                Ident {
+                    name: "a",
+                    span: Span {
+                        start: 217,
+                        end: 218,
+                    },
+                },
+                Ident {
+                    name: "b",
+                    span: Span {
+                        start: 220,
+                        end: 221,
+                    },
+                },
+            ],
+            corpo: Expr {
+                kind: Binario(
+                    Expr {
+                        kind: Identificador(
+                            "a",
+                        ),
+                        span: Span {
+                            start: 225,
+                            end: 226,
+                        },
+                    },
+                    Add,
+                    Expr {
+                        kind: Identificador(
+                            "b",
+                        ),
+                        span: Span {
+                            start: 229,
+                            end: 230,
+                        },
+                    },
+                ),
+                span: Span {
+                    start: 225,
+                    end: 230,
+                },
+            },
+            span: Span {
+                start: 207,
+                end: 231,
+            },
+        },
+    ),
+    Fn(
+        FnDecl {
+            nome: Ident {
+                name: "hipotenusa2",
+                span: Span {
+                    start: 237,
+                    end: 248,
+                },
+            },
+            params: [
+                Ident {
+                    name: "a",
+                    span: Span {
+                        start: 249,
+                        end: 250,
+                    },
+                },
+                Ident {
+                    name: "b",
+                    span: Span {
+                        start: 252,
+                        end: 253,
+                    },
+                },
+            ],
+            corpo: Expr {
+                kind: ChamadaFuncao(
+                    Ident {
+                        name: "soma",
+                        span: Span {
+                            start: 257,
+                            end: 261,
+                        },
+                    },
+                    [
+                        Expr {
+                            kind: Binario(
+                                Expr {
+                                    kind: Identificador(
+                                        "a",
+                                    ),
+                                    span: Span {
+                                        start: 262,
+                                        end: 263,
+                                    },
+                                },
+                                Mul,
+                                Expr {
+                                    kind: Identificador(
+                                        "a",
+                                    ),
+                                    span: Span {
+                                        start: 266,
+                                        end: 267,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 262,
+                                end: 267,
+                            },
+                        },
+                        Expr {
+                            kind: Binario(
+                                Expr {
+                                    kind: Identificador(
+                                        "b",
+                                    ),
+                                    span: Span {
+                                        start: 269,
+                                        end: 270,
+                                    },
+                                },
+                                Mul,
+                                Expr {
+                                    kind: Identificador(
+                                        "b",
+                                    ),
+                                    span: Span {
+                                        start: 273,
+                                        end: 274,
+                                    },
+                                },
+                            ),
+                            span: Span {
+                                start: 269,
+                                end: 274,
+                            },
+                        },
+                    ],
+                ),
+                span: Span {
+                    start: 257,
+                    end: 275,
+                },
+            },
+            span: Span {
+                start: 232,
+                end: 276,
+            },
+        },
+    ),
+    Print(
+        PrintStmt {
+            args: [
+                Expr {
+                    kind: ChamadaFuncao(
+                        Ident {
+                            name: "dobro",
+                            span: Span {
+                                start: 318,
+                                end: 323,
+                            },
+                        },
+                        [
+                            Expr {
+                                kind: Numero(
+                                    21.0,
+                                ),
+                                span: Span {
+                                    start: 324,
+                                    end: 326,
+                                },
+                            },
+                        ],
+                    ),
+                    span: Span {
+                        start: 318,
+                        end: 327,
+                    },
+                },
+            ],
+            span: Span {
+                start: 312,
+                end: 329,
+            },
+        },
+    ),
+    Print(
+        PrintStmt {
+            args: [
+                Expr {
+                    kind: ChamadaFuncao(
+                        Ident {
+                            name: "soma",
+                            span: Span {
+                                start: 357,
+                                end: 361,
+                            },
+                        },
+                        [
+                            Expr {
+                                kind: ChamadaFuncao(
+                                    Ident {
+                                        name: "dobro",
+                                        span: Span {
+                                            start: 362,
+                                            end: 367,
+                                        },
+                                    },
+                                    [
+                                        Expr {
+                                            kind: Numero(
+                                                3.0,
+                                            ),
+                                            span: Span {
+                                                start: 368,
+                                                end: 369,
+                                            },
+                                        },
+                                    ],
+                                ),
+                                span: Span {
+                                    start: 362,
+                                    end: 370,
+                                },
+                            },
+                            Expr {
+                                kind: Numero(
+                                    4.0,
+                                ),
+                                span: Span {
+                                    start: 372,
+                                    end: 373,
+                                },
+                            },
+                        ],
+                    ),
+                    span: Span {
+                        start: 357,
+                        end: 374,
+                    },
+                },
+            ],
+            span: Span {
+                start: 351,
+                end: 376,
+            },
+        },
+    ),
+    Print(
+        PrintStmt {
+            args: [
+                Expr {
+                    kind: ChamadaFuncao(
+                        Ident {
+                            name: "hipotenusa2",
+                            span: Span {
+                                start: 396,
+                                end: 407,
+                            },
+                        },
+                        [
+                            Expr {
+                                kind: Numero(
+                                    3.0,
+                                ),
+                                span: Span {
+                                    start: 408,
+                                    end: 409,
+                                },
+                            },
+                            Expr {
+                                kind: Numero(
+                                    4.0,
+                                ),
+                                span: Span {
+                                    start: 411,
+                                    end: 412,
+                                },
+                            },
+                        ],
+                    ),
+                    span: Span {
+                        start: 396,
+                        end: 413,
+                    },
+                },
+            ],
+            span: Span {
+                start: 390,
+                end: 415,
+            },
+        },
+    ),
+    Let(
+        LetDecl {
+            nome: Ident {
+                name: "r",
+                span: Span {
+                    start: 434,
+                    end: 435,
+                },
+            },
+            valor: Expr {
+                kind: Binario(
+                    Expr {
+                        kind: ChamadaFuncao(
+                            Ident {
+                                name: "soma",
+                                span: Span {
+                                    start: 438,
+                                    end: 442,
+                                },
+                            },
+                            [
+                                Expr {
+                                    kind: Numero(
+                                        1.0,
+                                    ),
+                                    span: Span {
+                                        start: 443,
+                                        end: 444,
+                                    },
+                                },
+                                Expr {
+                                    kind: Numero(
+                                        2.0,
+                                    ),
+                                    span: Span {
+                                        start: 446,
+                                        end: 447,
+                                    },
+                                },
+                            ],
+                        ),
+                        span: Span {
+                            start: 438,
+                            end: 448,
+                        },
+                    },
+                    Mul,
+                    Expr {
+                        kind: ChamadaFuncao(
+                            Ident {
+                                name: "dobro",
+                                span: Span {
+                                    start: 451,
+                                    end: 456,
+                                },
+                            },
+                            [
+                                Expr {
+                                    kind: Numero(
+                                        5.0,
+                                    ),
+                                    span: Span {
+                                        start: 457,
+                                        end: 458,
+                                    },
+                                },
+                            ],
+                        ),
+                        span: Span {
+                            start: 451,
+                            end: 459,
+                        },
+                    },
+                ),
+                span: Span {
+                    start: 438,
+                    end: 459,
+                },
+            },
+            span: Span {
+                start: 430,
+                end: 460,
+            },
+        },
+    ),
+    Print(
+        PrintStmt {
+            args: [
+                Expr {
+                    kind: Texto(
+                        "r =",
+                    ),
+                    span: Span {
+                        start: 467,
+                        end: 472,
+                    },
+                },
+                Expr {
+                    kind: Identificador(
+                        "r",
+                    ),
+                    span: Span {
+                        start: 474,
+                        end: 475,
+                    },
+                },
+            ],
+            span: Span {
+                start: 461,
+                end: 477,
+            },
+        },
+    ),
+    Fn(
+        FnDecl {
+            nome: Ident {
+                name: "abs",
+                span: Span {
+                    start: 569,
+                    end: 572,
+                },
+            },
+            params: [
+                Ident {
+                    name: "x",
+                    span: Span {
+                        start: 573,
+                        end: 574,
+                    },
+                },
+            ],
+            corpo: Expr {
+                kind: Se(
+                    Expr {
+                        kind: Binario(
+                            Expr {
+                                kind: Identificador(
+                                    "x",
+                                ),
+                                span: Span {
+                                    start: 581,
+                                    end: 582,
+                                },
+                            },
+                            Lt,
+                            Expr {
+                                kind: Numero(
+                                    0.0,
+                                ),
+                                span: Span {
+                                    start: 585,
+                                    end: 586,
+                                },
+                            },
+                        ),
+                        span: Span {
+                            start: 581,
+                            end: 586,
+                        },
+                    },
+                    Expr {
+                        kind: Unario(
+                            Neg,
+                            Expr {
+                                kind: Identificador(
+                                    "x",
+                                ),
+                                span: Span {
+                                    start: 593,
+                                    end: 594,
+                                },
+                            },
+                        ),
+                        span: Span {
+                            start: 592,
+                            end: 594,
+                        },
+                    },
+                    Expr {
+                        kind: Identificador(
+                            "x",
+                        ),
+                        span: Span {
+                            start: 600,
+                            end: 601,
+                        },
+                    },
+                ),
+                span: Span {
+                    start: 578,
+                    end: 601,
+                },
+            },
+            span: Span {
+                start: 564,
+                end: 602,
+            },
+        },
+    ),
+    Fn(
+        FnDecl {
+            nome: Ident {
+                name: "max2",
+                span: Span {
+                    start: 608,
+                    end: 612,
+                },
+            },
+            params: [
+                Ident {
+                    name: "a",
+                    span: Span {
+                        start: 613,
+                        end: 614,
+                    },
+                },
+                Ident {
+                    name: "b",
+                    span: Span {
+                        start: 616,
+                        end: 617,
+                    },
+                },
+            ],
+            corpo: Expr {
+                kind: Se(
+                    Expr {
+                        kind: Binario(
+                            Expr {
+                                kind: Identificador(
+                                    "a",
+                                ),
+                                span: Span {
+                                    start: 624,
+                                    end: 625,
+                                },
+                            },
+                            Gt,
+                            Expr {
+                                kind: Identificador(
+                                    "b",
+                                ),
+                                span: Span {
+                                    start: 628,
+                                    end: 629,
+                                },
+                            },
+                        ),
+                        span: Span {
+                            start: 624,
+                            end: 629,
+                        },
+                    },
+                    Expr {
+                        kind: Identificador(
+                            "a",
+                        ),
+                        span: Span {
+                            start: 635,
+                            end: 636,
+                        },
+                    },
+                    Expr {
+                        kind: Identificador(
+                            "b",
+                        ),
+                        span: Span {
+                            start: 642,
+                            end: 643,
+                        },
+                    },
+                ),
+                span: Span {
+                    start: 621,
+                    end: 643,
+                },
+            },
+            span: Span {
+                start: 603,
+                end: 644,
+            },
+        },
+    ),
+    Print(
+        PrintStmt {
+            args: [
+                Expr {
+                    kind: ChamadaFuncao(
+                        Ident {
+                            name: "abs",
+                            span: Span {
+                                start: 651,
+                                end: 654,
+                            },
+                        },
+                        [
+                            Expr {
+                                kind: Unario(
+                                    Neg,
+                                    Expr {
+                                        kind: Numero(
+                                            7.0,
+                                        ),
+                                        span: Span {
+                                            start: 656,
+                                            end: 657,
+                                        },
+                                    },
+                                ),
+                                span: Span {
+                                    start: 655,
+                                    end: 657,
+                                },
+                            },
+                        ],
+                    ),
+                    span: Span {
+                        start: 651,
+                        end: 658,
+                    },
+                },
+                Expr {
+                    kind: ChamadaFuncao(
+                        Ident {
+                            name: "max2",
+                            span: Span {
+                                start: 660,
+                                end: 664,
+                            },
+                        },
+                        [
+                            Expr {
+                                kind: Numero(
+                                    3.0,
+                                ),
+                                span: Span {
+                                    start: 665,
+                                    end: 666,
+                                },
+                            },
+                            Expr {
+                                kind: Numero(
+                                    9.0,
+                                ),
+                                span: Span {
+                                    start: 668,
+                                    end: 669,
+                                },
+                            },
+                        ],
+                    ),
+                    span: Span {
+                        start: 660,
+                        end: 670,
+                    },
+                },
+            ],
+            span: Span {
+                start: 645,
+                end: 672,
+            },
+        },
+    ),
+]
+42
+10
+25
+r = 30
+7 9
+stderr:

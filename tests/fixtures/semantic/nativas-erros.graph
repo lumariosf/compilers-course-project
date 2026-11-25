@@ -1,0 +1,10 @@
+Graph G {
+    Node = {a, b}
+    Edge = a -> b
+}
+
+G.voar(a)
+G.connected(a)
+G.connected(a, zzz)
+G.short_path(a, b, a)
+let n = G.connected(a, b) + 1;

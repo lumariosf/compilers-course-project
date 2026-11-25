@@ -1,0 +1,15 @@
+exit=1
+stdout:
+stderr:
+examples/semantica_7_erro_funcoes.graph:8:6: erro: função `f` já declarada
+examples/semantica_7_erro_funcoes.graph:9:11: erro: parâmetro `x` repetido em `g`
+examples/semantica_7_erro_funcoes.graph:10:13: erro: variável `z` não declarada
+examples/semantica_7_erro_funcoes.graph:11:13: erro: o corpo da função `i` deve ser Number, encontrado Bool
+examples/semantica_7_erro_funcoes.graph:12:13: erro: função `k` não declarada
+examples/semantica_7_erro_funcoes.graph:13:10: erro: função `f` espera 1 argumento(s), recebeu 2
+examples/semantica_7_erro_funcoes.graph:14:12: erro: argumento 1 de `f` espera Number, encontrado Bool
+examples/semantica_7_erro_funcoes.graph:15:10: erro: `if` espera Bool, encontrado Number
+examples/semantica_7_erro_funcoes.graph:16:9: erro: função nativa `voar` desconhecida (disponíveis: short_dist, filter, short_path, connected)
+examples/semantica_7_erro_funcoes.graph:17:9: erro: `connected` espera 2 argumento(s), recebeu 1
+examples/semantica_7_erro_funcoes.graph:18:22: erro: nó `zzz` não existe em `G`
+11 erro(s) semântico(s)

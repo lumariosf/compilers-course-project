@@ -1,0 +1,9 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/nativas-erros.graph:6:3: erro: função nativa `voar` desconhecida (disponíveis: short_dist, filter, short_path, connected)
+tests/fixtures/semantic/nativas-erros.graph:7:3: erro: `connected` espera 2 argumento(s), recebeu 1
+tests/fixtures/semantic/nativas-erros.graph:8:16: erro: nó `zzz` não existe em `G`
+tests/fixtures/semantic/nativas-erros.graph:9:3: erro: `short_path` espera 2 argumento(s), recebeu 3
+tests/fixtures/semantic/nativas-erros.graph:10:9: erro: `+` espera Number, encontrado Bool
+5 erro(s) semântico(s)

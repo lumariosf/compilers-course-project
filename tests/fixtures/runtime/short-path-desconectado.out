@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/runtime/short-path-desconectado.graph:6:1: erro de execução: nós `a` e `c` não estão conectados no grafo `G`

@@ -1,0 +1,9 @@
+Graph G {
+    Node = {a, b, c}
+    Edge = { a -> b : 2, b -> c : 5, a -> c : 9 }
+}
+
+func custo(w) = w * 3 + 1;
+print(G.filter(for e in G | custo(e.weight) > 10));
+let d = G.short_dist(a, c);
+print(custo(d));
