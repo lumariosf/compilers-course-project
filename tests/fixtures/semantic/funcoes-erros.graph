@@ -1,0 +1,12 @@
+func f(x) = x + 1;
+func f(y) = y;
+func g(x, x) = x;
+func h(x) = z;
+func i(x) = x > 1;
+func j(x) = k(x);
+let r1 = f(1, 2);
+let r2 = f(True);
+print(if 1 then 2 else 3);
+print(if True then 1 else False);
+func l(x) = x + w;
+let w = 5;

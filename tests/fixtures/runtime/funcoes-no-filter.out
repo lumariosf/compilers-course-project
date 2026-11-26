@@ -1,0 +1,6 @@
+exit=0
+stdout:
+b -> c : 5
+a -> c : 9
+22
+stderr:

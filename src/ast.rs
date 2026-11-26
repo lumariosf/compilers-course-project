@@ -3,6 +3,34 @@ pub enum Item {
     Grafo(Grafo),
     GrafoMerge(GrafoMerge),
     Consulta(ExpressaoConsulta),
+    Let(LetDecl),
+    Print(PrintStmt),
+    Fn(FnDecl),
+}
+
+// func nome(p1, p2, ...) = expr;   (função nomeada, inspirada no cálculo lambda: λp1 p2. expr)
+// Parâmetros e resultado são sempre Number. A função pode chamar a si mesma (recursão).
+#[derive(Debug, Clone, PartialEq)]
+pub struct FnDecl {
+    pub nome: Ident,
+    pub params: Vec<Ident>,
+    pub corpo: Expr,
+    pub span: Span,
+}
+
+// let nome = expr;   (imutável: o nome vale sempre o mesmo valor)
+#[derive(Debug, Clone, PartialEq)]
+pub struct LetDecl {
+    pub nome: Ident,
+    pub valor: Expr,
+    pub span: Span,
+}
+
+// print(e1, e2, ...);
+#[derive(Debug, Clone, PartialEq)]
+pub struct PrintStmt {
+    pub args: Vec<Expr>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,6 +103,9 @@ pub enum Chamada {
     ShortDist { origem: Ident, destino: Ident },
     Filter { filtro: Filtro },
     Merge { grafo_alvo: Ident },
+    // Consulta que roda um algoritmo sobre o grafo: G.short_path(a, b), G.connected(a, b)
+    // As funções existentes e suas assinaturas ficam em consults.rs.
+    Nativa { nome: Ident, args: Vec<Ident> },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -108,6 +139,13 @@ pub enum ExprKind {
     Acesso(Box<Expr>, Ident),
     Unario(UnOp, Box<Expr>),
     Binario(Box<Expr>, BinOp, Box<Expr>),
+    // G.short_dist(a, b), G.filter(...): a chamada vem depois do que está à esquerda (encadeável).
+    // A Chamada fica em Box porque o Filtro contém uma Expr (sem Box o tipo teria tamanho infinito).
+    Consulta(Box<Expr>, Box<Chamada>),
+    // dobro(x), soma(a, b): chamada de uma função declarada com `func`
+    ChamadaFuncao(Ident, Vec<Expr>),
+    // if cond then a else b  (o `else` é obrigatório, então é sempre uma expressão)
+    Se(Box<Expr>, Box<Expr>, Box<Expr>),
 }
 
 impl Expr {
@@ -115,6 +153,29 @@ impl Expr {
     pub fn binario(l: Expr, op: BinOp, r: Expr) -> Expr {
         let span = Span { start: l.span.start, end: r.span.end };
         Expr { kind: ExprKind::Binario(Box::new(l), op, Box::new(r)), span }
+    }
+
+    // `G.filter(...).short_dist(a, b)` vira ExpressaoConsulta { grafo: G, chamadas: [filter, short_dist] },
+    // o formato que o checker e o interpretador já sabem tratar. None se a base não for o nome de um grafo.
+    pub fn como_consulta(&self) -> Option<ExpressaoConsulta> {
+        let mut chamadas: Vec<Chamada> = Vec::new();
+        let mut atual: &Expr = self;
+        loop {
+            match &atual.kind {
+                ExprKind::Consulta(base, chamada) => {
+                    chamadas.push((**chamada).clone());
+                    atual = &**base;
+                }
+                ExprKind::Identificador(nome) => {
+                    chamadas.reverse();
+                    return Some(ExpressaoConsulta {
+                        grafo: Ident { name: nome.clone(), span: atual.span },
+                        chamadas,
+                    });
+                }
+                _ => return None,
+            }
+        }
     }
 }
 

@@ -1,0 +1,18 @@
+// Erros de funções, `if` e consultas (cada linha marcada com (erro) gera 1 erro; 11 no total)
+Graph G {
+    Node = {a, b}
+    Edge = a -> b
+}
+
+func f(x) = x + 1;
+func f(y) = y;                  // (erro) função `f` já declarada
+func g(x, x) = x;               // (erro) parâmetro `x` repetido
+func h(x) = z;                  // (erro) variável `z` não declarada
+func i(x) = x > 1;              // (erro) o corpo deve ser Number
+func j(x) = k(x);               // (erro) função `k` não declarada
+let r1 = f(1, 2);             // (erro) f espera 1 argumento
+let r2 = f(True);             // (erro) argumento 1 espera Number
+print(if 1 then 2 else 3);    // (erro) `if` espera Bool
+print(G.voar(a));             // (erro) consulta `voar` desconhecida
+print(G.connected(a));        // (erro) connected espera 2 argumentos
+print(G.connected(a, zzz));   // (erro) nó `zzz` não existe

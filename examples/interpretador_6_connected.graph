@@ -1,0 +1,21 @@
+// connected: existe caminho de a até b? (BFS)
+// Devolve Bool e nunca dá erro, ao contrário de short_dist (que é erro de execução sem caminho).
+
+Graph Rede {
+    Node = {a, b, c, d, e}
+    Edge = { a -> b : 2, b -> c : 3, c -- d : 1 }
+}
+
+Rede.connected(a, d)    // True   (a -> b -> c -- d)
+Rede.connected(d, a)    // False  (as arestas `->` só andam num sentido)
+Rede.connected(c, d)    // True
+Rede.connected(d, c)    // True   (`--` anda nos dois sentidos)
+Rede.connected(a, e)    // False  (e está isolado)
+Rede.connected(e, e)    // True
+
+// combina com let, if e funções: usar short_dist só quando existe caminho
+func dobro(x) = x * 2;
+let ok = Rede.connected(a, d);
+print(ok);                                                  // True
+print(if ok then dobro(Rede.short_dist(a, d)) else -1);     // 12  (6 * 2)
+print(if Rede.connected(a, e) then 1 else -1);              // -1

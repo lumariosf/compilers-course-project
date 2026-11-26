@@ -1,0 +1,7 @@
+exit=0
+stdout:
+42
+10
+7 7
+r = 30
+stderr:

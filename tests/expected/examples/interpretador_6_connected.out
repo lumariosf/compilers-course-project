@@ -1,0 +1,12 @@
+exit=0
+stdout:
+True
+False
+True
+True
+False
+True
+True
+12
+-1
+stderr:

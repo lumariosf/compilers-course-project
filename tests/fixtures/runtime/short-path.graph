@@ -1,0 +1,10 @@
+Graph Rede {
+    Node = {a, b, c, d, e}
+    Edge = { a -> b : 2, b -> c : 3, a -> c : 10, c -- d : 1, d -> e : 4 }
+}
+
+Rede.short_path(a, e)
+Rede.short_path(d, c)
+Rede.short_path(a, a)
+let p = Rede.short_path(a, c);
+print("a até c:", p);

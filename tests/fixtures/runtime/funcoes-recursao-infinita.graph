@@ -1,0 +1,2 @@
+func inf(n) = inf(n + 1);
+print(inf(0));

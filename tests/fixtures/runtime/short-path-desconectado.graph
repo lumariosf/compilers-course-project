@@ -1,0 +1,6 @@
+Graph G {
+    Node = {a, b, c}
+    Edge = a -> b
+}
+
+G.short_path(a, c)

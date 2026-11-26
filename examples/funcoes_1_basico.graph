@@ -1,0 +1,18 @@
+// Funções nomeadas sobre Number, inspiradas no cálculo lambda:  func nome(parâmetros) = corpo;
+// Parâmetros e resultado são sempre Number. O corpo vê os parâmetros e os `let` declarados antes.
+
+func dobro(x) = x * 2;
+func soma(a, b) = a + b;
+func hipotenusa2(a, b) = soma(a * a, b * b);   // funções chamando funções
+
+print(dobro(21));                // 42
+print(soma(dobro(3), 4));        // 10
+print(hipotenusa2(3, 4));        // 25
+
+let r = soma(1, 2) * dobro(5);
+print("r =", r);                 // r = 30
+
+// if/then/else é uma expressão (o else é obrigatório)
+func abs(x) = if x < 0 then -x else x;
+func max2(a, b) = if a > b then a else b;
+print(abs(-7), max2(3, 9));      // 7 9

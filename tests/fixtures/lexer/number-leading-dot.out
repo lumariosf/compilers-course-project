@@ -1,4 +1,4 @@
 exit=1
 stdout:
 stderr:
-Erro de parsing: UnrecognizedToken { token: (95, Dot, 96), expected: ["\"(\"", "\"-\"", "\"False\"", "\"True\"", "\"ident\"", "\"not\"", "\"number\"", "\"string\""] }
+Erro de parsing: UnrecognizedToken { token: (95, Dot, 96), expected: ["\"(\"", "\"-\"", "\"False\"", "\"True\"", "\"ident\"", "\"if\"", "\"not\"", "\"number\"", "\"string\""] }

@@ -18,6 +18,12 @@ extern {
         "and" => Token::And,
         "or" => Token::Or,
         "not" => Token::Not,
+        "let" => Token::Let,
+        "print" => Token::Print,
+        "func" => Token::Func,
+        "if" => Token::If,
+        "then" => Token::Then,
+        "else" => Token::Else,
 
         "short_dist" => Token::ShortDist,
         "filter" => Token::Filter,
@@ -72,6 +78,36 @@ Item: Item = {
     <g:DeclaracaoGrafo> => Item::Grafo(g),
     <m:DeclaracaoGrafoMerge> => Item::GrafoMerge(m),
     <c:ComandoConsulta> => Item::Consulta(c),
+    <l:DeclaracaoLet> => Item::Let(l),
+    <p:ComandoPrint> => Item::Print(p),
+    <f:DeclaracaoFn> => Item::Fn(f),
+};
+
+// func nome(p1, p2, ...) = expr;
+DeclaracaoFn: FnDecl = {
+    <l:@L> "func" <nome:Ident> "(" <params:Comma<Ident>> ")" "=" <corpo:Expr> ";" <r:@R> => FnDecl {
+        nome,
+        params,
+        corpo,
+        span: Span { start: l, end: r },
+    },
+};
+
+// let nome = expr;
+DeclaracaoLet: LetDecl = {
+    <l:@L> "let" <nome:Ident> "=" <valor:Expr> ";" <r:@R> => LetDecl {
+        nome,
+        valor,
+        span: Span { start: l, end: r },
+    },
+};
+
+// print(e1, e2, ...);
+ComandoPrint: PrintStmt = {
+    <l:@L> "print" "(" <args:Comma<Expr>> ")" ";" <r:@R> => PrintStmt {
+        args,
+        span: Span { start: l, end: r },
+    },
 };
 
 
@@ -240,6 +276,15 @@ Chamada: Chamada = {
             filtro: f,
         }
     },
+
+    // G.short_path(a, b), G.connected(a, b), ...: quais nomes existem é decidido no checker
+    <nome:Ident> "(" <args:Comma<Ident>> ")"
+    => {
+        Chamada::Nativa {
+            nome,
+            args,
+        }
+    },
 };
 
 
@@ -287,6 +332,10 @@ Ponte: Ponte = {
 // ========== EXPRESSÕES
 
 Expr: Expr = {
+    <l:@L> "if" <c:Expr> "then" <a:Expr> "else" <b:Expr> <r:@R> => Expr {
+        kind: ExprKind::Se(Box::new(c), Box::new(a), Box::new(b)),
+        span: Span { start: l, end: r },
+    },
     ExprOr,
 };
 
@@ -336,6 +385,12 @@ ExprPos: Expr = {
         kind: ExprKind::Acesso(Box::new(base), campo),
         span: Span { start: l, end: r },
     },
+    // G.short_dist(a, b) e G.filter(...) como expressão (encadeáveis: G.filter(...).short_dist(a, b)).
+    // Sem conflito com o acesso `e.campo`: short_dist/filter são palavras-chave, não "ident".
+    <l:@L> <base:ExprPos> "." <c:Chamada> <r:@R> => Expr {
+        kind: ExprKind::Consulta(Box::new(base), Box::new(c)),
+        span: Span { start: l, end: r },
+    },
     ExprPrimaria,
 };
 
@@ -345,6 +400,10 @@ ExprPrimaria: Expr = {
     <l:@L> "True" <r:@R> => Expr { kind: ExprKind::Bool(true), span: Span { start: l, end: r } },
     <l:@L> "False" <r:@R> => Expr { kind: ExprKind::Bool(false), span: Span { start: l, end: r } },
     <l:@L> <id:"ident"> <r:@R> => Expr { kind: ExprKind::Identificador(id), span: Span { start: l, end: r } },
+    <l:@L> <id:"ident"> <ri:@R> "(" <args:Comma<Expr>> ")" <r:@R> => Expr {
+        kind: ExprKind::ChamadaFuncao(Ident { name: id, span: Span { start: l, end: ri } }, args),
+        span: Span { start: l, end: r },
+    },
     "(" <e:Expr> ")" => e,
 };
 

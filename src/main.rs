@@ -1,5 +1,6 @@
 mod ast;
 mod checker;
+mod consults;
 mod interpreter;
 mod lexer;
 mod types;
@@ -10,14 +11,25 @@ use std::fs;
 
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    if args.len() < 2 {
-        eprintln!("Uso: cargo run -- <arquivo>");
-        return;
+    // As funções `func` podem recursar até 1000 chamadas aninhadas: roda numa thread com pilha grande
+    // para o interpretador não estourar a pilha padrão (8 MB na main, 2 MB nas threads de teste).
+    let filho = std::thread::Builder::new()
+        .stack_size(256 * 1024 * 1024)
+        .spawn(run)
+        .expect("não foi possível criar a thread do interpretador");
+    if filho.join().is_err() {
+        std::process::exit(101);
     }
+}
 
-    let caminho = &args[1];
+fn run() {
+    let args: Vec<String> = env::args().collect();
+    let mostrar_ast = args.iter().any(|a| a == "--ast");
+   
+    let Some(caminho) = args.iter().skip(1).find(|a| !a.starts_with("--")) else {
+        eprintln!("Uso: cargo run -- [--ast] <arquivo>");
+        return;
+    };
 
     let entrada = match fs::read_to_string(caminho) {
         Ok(conteudo) => conteudo,
@@ -32,7 +44,10 @@ fn main() {
     match parser.parse(lexer::Lexer::new(&entrada)) {
         Ok(programa) => match checker::checar(&programa) {
             Ok(()) => {
-                println!("{:#?}", programa);
+                // println!("{:#?}", programa);
+                if mostrar_ast {
+                    println!("{:#?}", programa);
+                }
                 for aviso in interpreter::avisos(&programa) {
                     let (linha, coluna) = types::linha_coluna(&entrada, aviso.span.start);
                     eprintln!("{}:{}:{}: aviso: {}", caminho, linha, coluna, aviso.msg);

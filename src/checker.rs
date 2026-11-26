@@ -1,6 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::ast::*;
+use crate::consults;
 use crate::types::{resolver_tipo, ErroSemantico, Tipo};
 
 // O que o checker sabe sobre um grafo já declarado
@@ -36,6 +37,12 @@ pub struct Checker {
     grafos: HashMap<String, InfoGrafo>,
     // Merges que falharam: ficam registrados, mas consultas sobre eles são ignoradas (evita cascata)
     incompletos: HashSet<String>,
+    // `let` declarados até aqui e o tipo de cada um (imutáveis)
+    variaveis: HashMap<String, Tipo>,
+    // `let` cujo valor tinha erro: usos posteriores não geram erro em cascata
+    variaveis_invalidas: HashSet<String>,
+    // Funções `func` declaradas até aqui e a quantidade de parâmetros (tudo é Number)
+    funcoes: HashMap<String, usize>,
     erros: Vec<ErroSemantico>,
 }
 
@@ -55,7 +62,14 @@ pub fn checar(programa: &[Item]) -> Result<(), Vec<ErroSemantico>> {
 
 impl Checker {
     fn new() -> Self {
-        Checker { grafos: HashMap::new(), incompletos: HashSet::new(), erros: Vec::new() }
+        Checker {
+            grafos: HashMap::new(),
+            incompletos: HashSet::new(),
+            variaveis: HashMap::new(),
+            variaveis_invalidas: HashSet::new(),
+            funcoes: HashMap::new(),
+            erros: Vec::new(),
+        }
     }
 
     fn erro(&mut self, span: Span, msg: impl Into<String>) {
@@ -67,6 +81,9 @@ impl Checker {
             Item::Grafo(g) => self.checar_grafo(g),
             Item::GrafoMerge(m) => self.checar_merge(m),
             Item::Consulta(c) => self.checar_consulta(c),
+            Item::Let(l) => self.checar_let(l),
+            Item::Print(p) => self.checar_print(p),
+            Item::Fn(f) => self.checar_fn(f),
         }
     }
 
@@ -336,6 +353,230 @@ impl Checker {
         }
     }
 
+    // ========== let e print (expressões fora do filter)
+
+    fn checar_let(&mut self, l: &LetDecl) {
+        let nome = &l.nome.name;
+        // O valor é checado ANTES de declarar o nome: `let x = x + 1;` é erro (x ainda não existe)
+        let tipo = self.tipo_expr(&l.valor);
+
+        if self.grafos.contains_key(nome) {
+            self.erro(l.nome.span, format!("`{}` já é o nome de um grafo", nome));
+            return;
+        }
+        if self.funcoes.contains_key(nome) {
+            self.erro(l.nome.span, format!("`{}` já é o nome de uma função", nome));
+            return;
+        }
+        if self.variaveis.contains_key(nome) || self.variaveis_invalidas.contains(nome) {
+            self.erro(l.nome.span, format!("variável `{}` já declarada (variáveis são imutáveis)", nome));
+            return;
+        }
+        match tipo {
+            Some(t) => {
+                self.variaveis.insert(nome.clone(), t);
+            }
+            None => {
+                self.variaveis_invalidas.insert(nome.clone());
+            }
+        }
+    }
+
+    // func nome(a, b) = corpo;  — parâmetros e resultado são Number.
+    // O corpo enxerga os parâmetros, os `let` declarados ANTES da função e ela mesma (recursão).
+    // Um parâmetro com o mesmo nome de um `let` esconde o `let` dentro do corpo.
+    fn checar_fn(&mut self, f: &FnDecl) {
+        let nome = &f.nome.name;
+        let mut valida = true;
+        if self.grafos.contains_key(nome) {
+            self.erro(f.nome.span, format!("`{}` já é o nome de um grafo", nome));
+            valida = false;
+        } else if self.funcoes.contains_key(nome) {
+            self.erro(f.nome.span, format!("função `{}` já declarada", nome));
+            valida = false;
+        } else if self.variaveis.contains_key(nome) || self.variaveis_invalidas.contains(nome) {
+            self.erro(f.nome.span, format!("`{}` já é o nome de uma variável", nome));
+            valida = false;
+        }
+
+        // Registrada ANTES de checar o corpo, para permitir recursão
+        if valida {
+            self.funcoes.insert(nome.clone(), f.params.len());
+        }
+
+        // Os parâmetros entram por cima das variáveis de fora; depois restauramos o escopo global
+        let externas = self.variaveis.clone();
+        let mut vistos: HashSet<&str> = HashSet::new();
+        for p in &f.params {
+            if !vistos.insert(p.name.as_str()) {
+                self.erro(p.span, format!("parâmetro `{}` repetido em `{}`", p.name, nome));
+            }
+            self.variaveis.insert(p.name.clone(), Tipo::Number);
+        }
+        let tipo_corpo = self.tipo_expr(&f.corpo);
+        self.variaveis = externas;
+
+        if let Some(t) = tipo_corpo {
+            if t != Tipo::Number {
+                self.erro(
+                    f.corpo.span,
+                    format!("o corpo da função `{}` deve ser Number, encontrado {}", nome, t),
+                );
+            }
+        }
+    }
+
+    fn checar_print(&mut self, p: &PrintStmt) {
+        for arg in &p.args {
+            let _ = self.tipo_expr(arg);
+        }
+    }
+
+    // None = a expressão tem erro (já reportado); quem recebe None não reporta de novo
+    fn tipo_expr(&mut self, e: &Expr) -> Option<Tipo> {
+        match &e.kind {
+            ExprKind::Numero(_) => Some(Tipo::Number),
+            ExprKind::Texto(_) => Some(Tipo::String),
+            ExprKind::Bool(_) => Some(Tipo::Bool),
+            ExprKind::Identificador(x) => {
+                if let Some(t) = self.variaveis.get(x) {
+                    return Some(t.clone());
+                }
+                if self.variaveis_invalidas.contains(x) {
+                    return None;
+                }
+                if self.funcoes.contains_key(x) {
+                    self.erro(e.span, format!("`{}` é uma função: chame-a como `{}(...)`", x, x));
+                } else if self.grafos.contains_key(x) {
+                    self.erro(
+                        e.span,
+                        format!("`{}` é um grafo: use `{}.short_dist(...)` ou `{}.filter(...)`", x, x, x),
+                    );
+                } else {
+                    self.erro(e.span, format!("variável `{}` não declarada", x));
+                }
+                None
+            }
+            ExprKind::Acesso(_, campo) => {
+                self.erro(campo.span, format!("acesso a `{}` só é permitido dentro de um filter", campo.name));
+                None
+            }
+            ExprKind::Unario(op, interno) => {
+                let t = self.tipo_expr(interno);
+                let (esperado, simb) = match op {
+                    UnOp::Not => (Tipo::Bool, "not"),
+                    UnOp::Neg => (Tipo::Number, "-"),
+                };
+                self.exigir_tipo(interno, t, &esperado, simb);
+                Some(esperado)
+            }
+            ExprKind::Binario(l, op, r) => self.tipo_binario(l, *op, r),
+            ExprKind::Consulta(_, _) => self.tipo_consulta(e),
+            ExprKind::ChamadaFuncao(nome, args) => {
+                let tipos: Vec<Option<Tipo>> = args.iter().map(|a| self.tipo_expr(a)).collect();
+                let aridade = match self.funcoes.get(&nome.name) {
+                    Some(&n) => n,
+                    None => {
+                        self.erro(nome.span, format!("função `{}` não declarada", nome.name));
+                        return None;
+                    }
+                };
+                if aridade != args.len() {
+                    self.erro(
+                        e.span,
+                        format!("função `{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
+                    );
+                    return Some(Tipo::Number);
+                }
+                for (i, (arg, t)) in args.iter().zip(tipos).enumerate() {
+                    if let Some(t) = t {
+                        if t != Tipo::Number {
+                            self.erro(
+                                arg.span,
+                                format!("argumento {} de `{}` espera Number, encontrado {}", i + 1, nome.name, t),
+                            );
+                        }
+                    }
+                }
+                Some(Tipo::Number)
+            }
+            ExprKind::Se(cond, entao, senao) => {
+                let tc = self.tipo_expr(cond);
+                self.exigir_tipo(cond, tc, &Tipo::Bool, "if");
+                let ta = self.tipo_expr(entao);
+                let tb = self.tipo_expr(senao);
+                match (ta, tb) {
+                    (Some(a), Some(b)) if a == b => Some(a),
+                    (Some(a), Some(b)) => {
+                        self.erro(e.span, format!("os dois ramos do `if` devem ter o mesmo tipo: {} e {}", a, b));
+                        None
+                    }
+                    _ => None,
+                }
+            }
+        }
+    }
+
+    fn tipo_binario(&mut self, l: &Expr, op: BinOp, r: &Expr) -> Option<Tipo> {
+        let tl = self.tipo_expr(l);
+        let tr = self.tipo_expr(r);
+        let simb = simbolo(op);
+        match op {
+            BinOp::And | BinOp::Or => {
+                self.exigir_tipo(l, tl, &Tipo::Bool, simb);
+                self.exigir_tipo(r, tr, &Tipo::Bool, simb);
+                Some(Tipo::Bool)
+            }
+            BinOp::Add | BinOp::Sub | BinOp::Mul | BinOp::Div | BinOp::Mod => {
+                self.exigir_tipo(l, tl, &Tipo::Number, simb);
+                self.exigir_tipo(r, tr, &Tipo::Number, simb);
+                Some(Tipo::Number)
+            }
+            BinOp::Gt | BinOp::Gte | BinOp::Lt | BinOp::Lte => {
+                self.exigir_tipo(l, tl.as_ref().map(sem_option).cloned(), &Tipo::Number, simb);
+                self.exigir_tipo(r, tr.as_ref().map(sem_option).cloned(), &Tipo::Number, simb);
+                Some(Tipo::Bool)
+            }
+            BinOp::Eq | BinOp::Neq => {
+                if let (Some(a), Some(b)) = (&tl, &tr) {
+                    if !comparaveis(a, b) {
+                        let span = Span { start: l.span.start, end: r.span.end };
+                        self.erro(span, format!("não é possível comparar {} com {} usando `{}`", a, b, simb));
+                    }
+                }
+                Some(Tipo::Bool)
+            }
+        }
+    }
+
+    fn exigir_tipo(&mut self, e: &Expr, t: Option<Tipo>, esperado: &Tipo, simb: &str) {
+        if let Some(t) = t {
+            if t != *esperado {
+                self.erro(e.span, format!("`{}` espera {}, encontrado {}", simb, esperado, t));
+            }
+        }
+    }
+
+    // G.short_dist(a, b) -> Number;  G.filter(...) -> Grafo.
+    // Reaproveita o checar_consulta (nós existem, filter percorre o próprio grafo, condição é Bool).
+    fn tipo_consulta(&mut self, e: &Expr) -> Option<Tipo> {
+        let Some(c) = e.como_consulta() else {
+            self.erro(e.span, "uma consulta deve começar pelo nome de um grafo: `G.short_dist(a, b)`");
+            return None;
+        };
+        let erros_antes = self.erros.len();
+        self.checar_consulta(&c);
+        if self.erros.len() > erros_antes {
+            return None;
+        }
+        match c.chamadas.last() {
+            Some(Chamada::ShortDist { .. }) => Some(Tipo::Number),
+            Some(Chamada::Filter { .. }) => Some(Tipo::Grafo),
+            Some(Chamada::Nativa { nome, .. }) => consults::assinatura(&nome.name).map(|(_, t)| t),
+            _ => None,
+        }
+    }
+
     // ========== consultas
 
     fn checar_consulta(&mut self, c: &ExpressaoConsulta) {
@@ -346,6 +587,7 @@ impl Checker {
             self.erro(c.grafo.span, format!("grafo `{}` não declarado", c.grafo.name));
             return;
         };
+        let funcoes = &self.funcoes;
         let erros = &mut self.erros;
 
         // filter só remove arestas: toda chamada encadeada vê os mesmos nós do grafo original
@@ -372,7 +614,12 @@ impl Checker {
                             ),
                         ));
                     }
-                    let mut tipador = Tipador { variavel: &filtro.variavel.name, grafo: info, erros: &mut *erros };
+                    let mut tipador = Tipador {
+                        variavel: &filtro.variavel.name,
+                        grafo: info,
+                        funcoes,
+                        erros: &mut *erros,
+                    };
                     if let Some(t) = tipador.tipo(&filtro.condicao) {
                         if t != Tipo::Bool {
                             erros.push(ErroSemantico::new(
@@ -382,6 +629,32 @@ impl Checker {
                         }
                     }
                 }
+                Chamada::Nativa { nome, args } => match consults::assinatura(&nome.name) {
+                    None => erros.push(ErroSemantico::new(
+                        nome.span,
+                        format!(
+                            "consulta `{}` desconhecida (disponíveis: short_dist, filter, {})",
+                            nome.name,
+                            consults::NOMES.join(", ")
+                        ),
+                    )),
+                    Some((aridade, _)) => {
+                        if args.len() != aridade {
+                            erros.push(ErroSemantico::new(
+                                nome.span,
+                                format!("`{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
+                            ));
+                        }
+                        for no in args {
+                            if !info.nos.contains_key(&no.name) {
+                                erros.push(ErroSemantico::new(
+                                    no.span,
+                                    format!("nó `{}` não existe em `{}`", no.name, c.grafo.name),
+                                ));
+                            }
+                        }
+                    }
+                },
                 // Resto da sintaxe antiga `G2.merge(G1)`: nenhuma regra da gramática gera esta chamada
                 Chamada::Merge { grafo_alvo } => erros.push(ErroSemantico::new(
                     grafo_alvo.span,
@@ -398,6 +671,7 @@ impl Checker {
 struct Tipador<'a> {
     variavel: &'a str,
     grafo: &'a InfoGrafo,
+    funcoes: &'a HashMap<String, usize>,
     erros: &'a mut Vec<ErroSemantico>,
 }
 
@@ -437,6 +711,53 @@ impl Tipador<'_> {
                 Some(esperado)
             }
             ExprKind::Binario(l, op, r) => self.binario(l, *op, r),
+            ExprKind::Consulta(_, _) => {
+                self.erro(e.span, "consultas não são permitidas dentro de uma condição de filter");
+                None
+            }
+            // Funções `func` podem ser usadas no filter: `e.weight` é Number, então `dobro(e.weight) > 10` é válido
+            ExprKind::ChamadaFuncao(nome, args) => {
+                let tipos: Vec<Option<Tipo>> = args.iter().map(|a| self.tipo(a)).collect();
+                let aridade = match self.funcoes.get(&nome.name) {
+                    Some(&n) => n,
+                    None => {
+                        self.erro(nome.span, format!("função `{}` não declarada", nome.name));
+                        return None;
+                    }
+                };
+                if aridade != args.len() {
+                    self.erro(
+                        e.span,
+                        format!("função `{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
+                    );
+                    return Some(Tipo::Number);
+                }
+                for (i, (arg, t)) in args.iter().zip(tipos).enumerate() {
+                    if let Some(t) = t {
+                        if t != Tipo::Number {
+                            self.erro(
+                                arg.span,
+                                format!("argumento {} de `{}` espera Number, encontrado {}", i + 1, nome.name, t),
+                            );
+                        }
+                    }
+                }
+                Some(Tipo::Number)
+            }
+            ExprKind::Se(cond, entao, senao) => {
+                let tc = self.tipo(cond);
+                self.exigir(cond, tc, &Tipo::Bool, "if");
+                let ta = self.tipo(entao);
+                let tb = self.tipo(senao);
+                match (ta, tb) {
+                    (Some(a), Some(b)) if a == b => Some(a),
+                    (Some(a), Some(b)) => {
+                        self.erro(e.span, format!("os dois ramos do `if` devem ter o mesmo tipo: {} e {}", a, b));
+                        None
+                    }
+                    _ => None,
+                }
+            }
         }
     }
 
@@ -558,6 +879,7 @@ impl Tipador<'_> {
 fn comparaveis(a: &Tipo, b: &Tipo) -> bool {
     match (sem_option(a), sem_option(b)) {
         (Tipo::Aresta, _) | (_, Tipo::Aresta) => false,
+        (Tipo::Grafo, _) | (_, Tipo::Grafo) => false,
         (Tipo::No, Tipo::String) | (Tipo::String, Tipo::No) => true,
         (x, y) => x == y,
     }
@@ -736,5 +1058,42 @@ mod tests {
             "Graph G { NodeType P { x: Number }\n Node = a : P { x: 1 }\n Node = b }\nG.filter(for e in G | e.origin.x > 1)",
             "nó `b` não tem NodeType",
         );
+    }
+    #[test]
+    fn funcoes() {
+        assert!(erros("func dobro(x) = x * 2;\nlet y = dobro(3);\nprint(y);").is_empty());
+        assert!(erros("func fat(n) = if n <= 1 then 1 else n * fat(n - 1);").is_empty());
+        um_erro("func f(x) = g(x);", "função `g` não declarada");
+        um_erro("func f(x) = x;\nfunc f(y) = y;", "função `f` já declarada");
+        um_erro("func f(x, x) = x;", "parâmetro `x` repetido");
+        um_erro("func f(x) = y;", "variável `y` não declarada");
+        um_erro("func f(x) = x > 1;", "deve ser Number, encontrado Bool");
+        um_erro("func f(x) = x;\nlet a = f(1, 2);", "espera 1 argumento(s), recebeu 2");
+        um_erro("func f(x) = x;\nlet a = f(True);", "argumento 1 de `f` espera Number");
+        assert!(erros("let k = 1;\nfunc f(x) = x + k;").is_empty());
+        assert!(erros("let k = 1;\nfunc f(k) = k * 2;").is_empty()); // o parâmetro esconde o let
+        um_erro("func f(x) = x + k;\nlet k = 1;", "variável `k` não declarada"); // let só vale se vier antes
+        um_erro("let k = True;\nfunc f(x) = x + k;", "`+` espera Number"); // o tipo do let vale dentro da função
+        um_erro("func f(x) = if x then 1 else 2;", "`if` espera Bool");
+        um_erro("func f(x) = if x > 0 then 1 else True;", "mesmo tipo");
+    }
+
+    #[test]
+    fn funcoes_no_filtro() {
+        let prog = format!("{}\nfunc dobro(x) = x * 2;\nG.filter(for e in G | dobro(e.weight) > 4)", PESSOAS);
+        assert!(erros(&prog).is_empty());
+        let prog = format!("{}\nG.filter(for e in G | triplo(e.weight) > 4)", PESSOAS);
+        um_erro(&prog, "função `triplo` não declarada");
+    }
+
+    #[test]
+    fn consultas_short_path_e_connected() {
+        assert!(erros(&format!("{}\nG.connected(ana, bia)\nG.short_path(ana, bia)", PESSOAS)).is_empty());
+        um_erro(&format!("{}\nG.voar(ana)", PESSOAS), "consulta `voar` desconhecida");
+        um_erro(&format!("{}\nG.connected(ana)", PESSOAS), "espera 2 argumento(s), recebeu 1");
+        um_erro(&format!("{}\nG.connected(ana, zeca)", PESSOAS), "nó `zeca` não existe");
+        // o tipo do resultado entra na tipagem: connected é Bool
+        assert!(erros(&format!("{}\nlet ok = G.connected(ana, bia);\nprint(if ok then G.short_dist(ana, bia) else 0);", PESSOAS)).is_empty());
+        um_erro(&format!("{}\nlet n = G.short_dist(ana, bia) and True;", PESSOAS), "`and` espera Bool, encontrado Number");
     }
 }

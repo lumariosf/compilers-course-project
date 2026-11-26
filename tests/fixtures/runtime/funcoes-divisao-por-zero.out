@@ -1,0 +1,5 @@
+exit=1
+stdout:
+0.25
+stderr:
+tests/fixtures/runtime/funcoes-divisao-por-zero.graph:1:23: erro de execução: divisão por zero

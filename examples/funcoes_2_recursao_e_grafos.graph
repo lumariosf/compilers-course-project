@@ -1,0 +1,21 @@
+// Recursão (a função enxerga a si mesma) e funções usadas junto com consultas em grafos.
+
+func fat(n) = if n <= 1 then 1 else n * fat(n - 1);
+func fib(n) = if n < 2 then n else fib(n - 1) + fib(n - 2);
+func mdc(a, b) = if b == 0 then a else mdc(b, a % b);
+
+print("5! =", fat(5));                  // 5! = 120
+print("fib(10) =", fib(10));            // fib(10) = 55
+print("mdc(48, 18) =", mdc(48, 18));    // mdc(48, 18) = 6
+
+Graph G {
+    Node = {a, b, c}
+    Edge = { a -> b : 2, b -> c : 5, a -> c : 9 }
+}
+
+// uma função pode ser usada dentro da condição do filter (e.weight é Number)
+func custo(w) = w * 3 + 1;
+print(G.filter(for e in G | custo(e.weight) > 10));   // b -> c : 5  e  a -> c : 9
+
+let d = G.short_dist(a, c);
+print("custo do caminho:", custo(d));   // d = 7, então 22

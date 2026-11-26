@@ -1,0 +1,8 @@
+exit=0
+stdout:
+5
+distância dobrada: 10
+True
+b -> c : 3
+a -> c : 10
+stderr:

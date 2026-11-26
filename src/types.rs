@@ -12,6 +12,7 @@ pub enum Tipo {
     Option(Box<Tipo>),
     Aresta, // tipo da variável do filter: for e in G | ...
     No,     // e.origin / e.destination: compara com String pelo nome e dá acesso aos atributos
+    Grafo,  // resultado de G.filter(...): o grafo só com as arestas que passaram
 }
 
 impl fmt::Display for Tipo {
@@ -23,6 +24,7 @@ impl fmt::Display for Tipo {
             Tipo::Option(t) => write!(f, "Option<{}>", t),
             Tipo::Aresta => write!(f, "Aresta"),
             Tipo::No => write!(f, "Nó"),
+            Tipo::Grafo => write!(f, "Grafo"),
         }
     }
 }

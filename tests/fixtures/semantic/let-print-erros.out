@@ -1,0 +1,10 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/semantic/let-print-erros.graph:7:5: erro: variável `x` já declarada (variáveis são imutáveis)
+tests/fixtures/semantic/let-print-erros.graph:8:7: erro: variável `y` não declarada
+tests/fixtures/semantic/let-print-erros.graph:9:11: erro: `+` espera Number, encontrado String
+tests/fixtures/semantic/let-print-erros.graph:11:7: erro: `+` espera Number, encontrado Grafo
+tests/fixtures/semantic/let-print-erros.graph:12:7: erro: `G` é um grafo: use `G.short_dist(...)` ou `G.filter(...)`
+tests/fixtures/semantic/let-print-erros.graph:13:9: erro: variável `w` não declarada
+6 erro(s) semântico(s)

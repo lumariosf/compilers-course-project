@@ -1,0 +1,3 @@
+func inverso(x) = 1 / x;
+print(inverso(4));
+print(inverso(0));

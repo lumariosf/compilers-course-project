@@ -1,0 +1,4 @@
+exit=1
+stdout:
+stderr:
+tests/fixtures/runtime/funcoes-recursao-infinita.graph:1:15: erro de execução: limite de recursão excedido ao chamar `inf` (1000 chamadas aninhadas)
