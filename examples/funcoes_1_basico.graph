@@ -1,5 +1,5 @@
 // Funções nomeadas sobre Number, inspiradas no cálculo lambda:  func nome(parâmetros) = corpo;
-// Parâmetros e resultado são sempre Number. O corpo só enxerga os parâmetros.
+// Parâmetros e resultado são sempre Number. O corpo vê os parâmetros e os `let` declarados antes.
 
 func dobro(x) = x * 2;
 func soma(a, b) = a + b;

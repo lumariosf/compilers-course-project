@@ -313,12 +313,31 @@ for f in examples/interpretador_*.graph; do echo "== $f"; cargo run -q -- "$f"; 
 
 ### 10. Variáveis e `print`
 
-`let` guarda o valor de uma expressão (inclusive o resultado de uma consulta) num nome. Variáveis são **imutáveis**: cada nome é declarado uma única vez. `print` escreve os valores separados por espaço (textos sem aspas).
+`let` guarda o valor de uma expressão (inclusive o resultado de uma consulta) num nome. Variáveis são **imutáveis**: cada nome é declarado uma única vez.
 
 ```bash
 let dist = G.short_dist(a, c);
-print("distância:", dist, dist > 4);
+let ok = G.connected(a, c);
+print("distância:", dist, dist > 4, ok);
 ```
+
+O tipo da variável é **inferido** pelo checker a partir da expressão: não há anotação de tipo, e o tipo não muda depois (a variável é imutável).
+
+| Expressão | Tipo da variável |
+|-----------|------------------|
+| `3`, `a + 1`, `G.short_dist(a, b)`, `dobro(2)` | `Number` |
+| `"oi"` | texto |
+| `3 > 2`, `G.connected(a, b)` | `Bool` |
+| `G.filter(...)`, `G.short_path(a, b)` | lista de arestas |
+
+`print` aceita uma ou mais expressões de qualquer um desses tipos, separadas por vírgula, e escreve os valores separados por espaço:
+
+- `Number`: números inteiros saem sem casa decimal (`42`, não `42.0`);
+- `Bool`: `True` ou `False`;
+- texto: sem aspas;
+- lista de arestas: uma aresta por linha (`a -> b : 2`), ou `[]` se estiver vazia.
+
+Não dá para imprimir o grafo em si (`print(G)`) nem acessar um campo fora de um `filter` (`e.weight`): ambos são erros. Uma lista de arestas guardada num `let` não pode ser indexada nem passada para uma função (parâmetros são sempre `Number`).
 
 ### 11. Funções
 
@@ -330,6 +349,10 @@ func soma(a, b) = a + b;
 func fat(n) = if n <= 1 then 1 else n * fat(n - 1);
 
 print(soma(dobro(3), fat(5)));     # 126
+
+let taxa = 3;
+func com_taxa(x) = x * taxa;       # lê o `let taxa` declarado antes
+print(com_taxa(5));                # 15
 ```
 
 Regras:
@@ -337,13 +360,14 @@ Regras:
 - Parâmetros e resultado são sempre `Number` (em GRAPH todo número é `f64`; valores inteiros são mostrados sem casa decimal). O corpo deve ser `Number`.
 - `if cond then a else b` é uma **expressão**; o `else` é obrigatório e os dois ramos precisam ter o mesmo tipo. Como `if` é a expressão de mais baixa precedência, dentro de um operador use parênteses: `1 + (if c then 2 else 3)`.
 - A função pode chamar a si mesma (recursão), mas só funções **já declaradas** podem ser chamadas (não há recursão mútua). A recursão é limitada a 1000 chamadas aninhadas; passar disso é erro de execução.
-- O corpo só enxerga os **parâmetros**: não enxerga variáveis `let` de fora. Pode conter consultas (`func dist_ac() = G.short_dist(a, c);`).
+- **Escopo:** o corpo enxerga os parâmetros, os grafos, as outras funções já declaradas e as variáveis `let` declaradas **antes** da função. Um `let` declarado depois não vale (erro de compilação), e um parâmetro com o mesmo nome de um `let` esconde o `let` dentro do corpo. Como `let` é imutável, ler uma variável de fora é seguro: o valor nunca muda.
+- O corpo pode conter consultas (`func dist_ac() = G.short_dist(a, c);`).
 - Funções podem ser usadas dentro da condição de um `filter`: `G.filter(for e in G | custo(e.weight) > 10)`.
 - Erros em tempo de compilação: função não declarada ou repetida, número errado de argumentos, argumento que não é `Number`, parâmetro repetido, corpo que não é `Number`, `if` com condição que não é `Bool` ou ramos de tipos diferentes.
 
-### 12. Funções nativas de grafo
+### 12. Consultas `short_path` e `connected`
 
-Além de `short_dist` e `filter`, há duas consultas que rodam um algoritmo sobre o grafo. Os argumentos são nomes de nós, como em `short_dist`, e nós inexistentes são rejeitados em tempo de compilação.
+Além de `short_dist` e `filter`, há mais duas consultas, que também rodam um algoritmo sobre o grafo e se encadeiam com `G.` como as outras. Os argumentos são nomes de nós, como em `short_dist`, e nós inexistentes são rejeitados em tempo de compilação.
 
 | Consulta | Algoritmo | Resultado |
 |----------|-----------|-----------|
@@ -362,7 +386,7 @@ Rede.short_path(a, e)     # a -> b : 2
 
 `connected` combina bem com `if`: `if G.connected(a, b) then G.short_dist(a, b) else -1`.
 
-As nativas ficam em `src/consults.rs`. Para criar uma nova basta acrescentar a assinatura em `assinatura()`, o nome em `NOMES` e um braço em `executar_nativa()`: gramática e checker não mudam.
+Essas consultas ficam em `src/consults.rs`: a tabela `assinatura()` (quantos nós recebem e o tipo do resultado) é lida pelo checker, e `executar_nativa()` roda o algoritmo no interpretador. Para criar uma consulta nova basta acrescentar a assinatura em `assinatura()`, o nome em `NOMES` e um braço em `executar_nativa()`: gramática e checker não mudam.
 
 #### Exemplos da 3ª entrega
 
@@ -372,7 +396,7 @@ As nativas ficam em `src/consults.rs`. Para criar uma nova basta acrescentar a a
 | `funcoes_2_recursao_e_grafos.graph` | recursão (fatorial, Fibonacci, mdc) e funções no `filter` |
 | `interpretador_5_short_path.graph` | lista de arestas do menor caminho |
 | `interpretador_6_connected.graph` | `connected` e seu uso com `if` |
-| `semantica_7_erro_funcoes.graph` | 11 erros de funções, `if` e nativas |
+| `semantica_7_erro_funcoes.graph` | 11 erros de funções, `if` e consultas |
 
 ## Como rodar os testes
 

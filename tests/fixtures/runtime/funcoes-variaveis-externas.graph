@@ -1,0 +1,14 @@
+let taxa = 3;
+func com_taxa(x) = x * taxa;
+func esconde(taxa) = taxa + 1;
+
+Graph G {
+    Node = {a, b, c}
+    Edge = { a -> b : 2, b -> c : 5 }
+}
+let limite = G.short_dist(a, c);
+func acima(x) = if x > limite then 1 else 0;
+
+print(com_taxa(5));
+print(esconde(10));
+print(acima(10), acima(3));

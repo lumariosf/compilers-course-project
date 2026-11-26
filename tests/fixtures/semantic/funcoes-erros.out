@@ -10,5 +10,5 @@ tests/fixtures/semantic/funcoes-erros.graph:7:10: erro: função `f` espera 1 ar
 tests/fixtures/semantic/funcoes-erros.graph:8:12: erro: argumento 1 de `f` espera Number, encontrado Bool
 tests/fixtures/semantic/funcoes-erros.graph:9:10: erro: `if` espera Bool, encontrado Number
 tests/fixtures/semantic/funcoes-erros.graph:10:7: erro: os dois ramos do `if` devem ter o mesmo tipo: Number e Bool
-tests/fixtures/semantic/funcoes-erros.graph:12:17: erro: variável `k` não declarada
+tests/fixtures/semantic/funcoes-erros.graph:11:17: erro: variável `w` não declarada
 10 erro(s) semântico(s)

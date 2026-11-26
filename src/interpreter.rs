@@ -438,8 +438,9 @@ impl Interpretador {
         }
     }
 
-    // Avalia uma expressão fora do filter. `locais` = parâmetros da função em execução:
-    // dentro de uma função só os parâmetros são visíveis; fora (None) valem as variáveis do `let`.
+    // Avalia uma expressão fora do filter. `locais` = parâmetros da função em execução (Some) ou
+    // nenhum (None, nível global). Um nome é procurado primeiro nos parâmetros e depois nos `let`.
+    // (O checker garante que o `let` usado numa função foi declarado antes dela.)
     // G.short_dist(...) vira Numero; G.filter(...) vira Valor::Consulta (lista de arestas).
     fn avaliar_topo(
         &self,
@@ -453,7 +454,7 @@ impl Interpretador {
             ExprKind::Bool(b) => Ok(Valor::Bool(*b)),
             ExprKind::Identificador(nome) => {
                 let achado = match locais {
-                    Some(l) => l.get(nome),
+                    Some(l) => l.get(nome).or_else(|| self.variaveis.get(nome)),
                     None => self.variaveis.get(nome),
                 };
                 achado.cloned().ok_or_else(|| {
@@ -1398,9 +1399,13 @@ mod tests {
     }
 
     #[test]
-    fn funcao_enxerga_so_os_parametros() {
-        // `k` é um `let` de fora: o checker recusa o uso dentro do corpo
-        let erro = interpretar("let k = 1;\nfunc f(x) = x + k;").unwrap_err();
+    fn funcao_enxerga_let_declarado_antes() {
+        let prog = "let k = 10;\nfunc f(x) = x + k;\nfunc g(k) = k * 2;\nlet r = f(5);\nlet s = g(3);";
+        let (interp, _) = interpretar(prog).expect("deveria executar");
+        assert_eq!(interp.variaveis["r"], Valor::Numero(15.0));
+        assert_eq!(interp.variaveis["s"], Valor::Numero(6.0)); // o parâmetro `k` esconde o `let k`
+        // let declarado depois da função não vale dentro dela
+        let erro = interpretar("func f(x) = x + k;\nlet k = 10;").unwrap_err();
         assert!(erro.contains("variável `k` não declarada"), "{}", erro);
     }
 

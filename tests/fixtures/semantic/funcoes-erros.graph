@@ -8,5 +8,5 @@ let r1 = f(1, 2);
 let r2 = f(True);
 print(if 1 then 2 else 3);
 print(if True then 1 else False);
-let k = 5;
-func l(x) = x + k;
+func l(x) = x + w;
+let w = 5;

@@ -1,10 +1,10 @@
-// Funções nativas de GRAPH: consultas que rodam um algoritmo sobre o grafo.
+// Consultas de GRAPH que rodam um algoritmo sobre o grafo (além de `filter`).
 //
 //   G.short_dist(a, b)   (keyword, em interpreter.rs)  Dijkstra: distância mínima
 //   G.short_path(a, b)   Dijkstra: lista de arestas do menor caminho
 //   G.connected(a, b)    BFS: existe caminho de a até b? (Bool, nunca dá erro)
 //
-// Para criar uma função nova: (1) acrescente a assinatura em `assinatura` e o nome em `NOMES`,
+// Para criar uma consulta nova: (1) acrescente a assinatura em `assinatura` e o nome em `NOMES`,
 // (2) acrescente um braço em `executar_nativa`. O parser e o checker não precisam mudar.
 
 use std::collections::{HashMap, VecDeque};
@@ -33,7 +33,7 @@ pub fn executar_nativa(
     span: Span,
 ) -> Result<ResultadoConsulta, ErroExecucao> {
     let Some((aridade, _)) = assinatura(&nome.name) else {
-        return Err(ErroExecucao::new(nome.span, format!("função nativa `{}` desconhecida", nome.name)));
+        return Err(ErroExecucao::new(nome.span, format!("consulta `{}` desconhecida", nome.name)));
     };
     if args.len() != aridade {
         return Err(ErroExecucao::new(
@@ -164,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn checker_recusa_nativa_desconhecida_aridade_e_no_inexistente() {
+    fn checker_recusa_consulta_desconhecida_aridade_e_no_inexistente() {
         assert!(rodar(&com("G.voar(a)")).unwrap_err().contains("desconhecida"));
         assert!(rodar(&com("G.connected(a)")).unwrap_err().contains("espera 2 argumento"));
         assert!(rodar(&com("G.connected(a, zzz)")).unwrap_err().contains("não existe"));

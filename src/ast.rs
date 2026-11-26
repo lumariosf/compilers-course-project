@@ -103,7 +103,7 @@ pub enum Chamada {
     ShortDist { origem: Ident, destino: Ident },
     Filter { filtro: Filtro },
     Merge { grafo_alvo: Ident },
-    // Função nativa que roda um algoritmo sobre o grafo: G.short_path(a, b), G.connected(a, b)
+    // Consulta que roda um algoritmo sobre o grafo: G.short_path(a, b), G.connected(a, b)
     // As funções existentes e suas assinaturas ficam em consults.rs.
     Nativa { nome: Ident, args: Vec<Ident> },
 }

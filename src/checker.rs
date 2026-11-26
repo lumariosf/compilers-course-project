@@ -383,7 +383,8 @@ impl Checker {
     }
 
     // func nome(a, b) = corpo;  — parâmetros e resultado são Number.
-    // O corpo só enxerga os parâmetros (não enxerga `let` de fora) e a própria função (recursão).
+    // O corpo enxerga os parâmetros, os `let` declarados ANTES da função e ela mesma (recursão).
+    // Um parâmetro com o mesmo nome de um `let` esconde o `let` dentro do corpo.
     fn checar_fn(&mut self, f: &FnDecl) {
         let nome = &f.nome.name;
         let mut valida = true;
@@ -403,19 +404,17 @@ impl Checker {
             self.funcoes.insert(nome.clone(), f.params.len());
         }
 
-        // Dentro do corpo valem só os parâmetros: guardamos as variáveis de fora e restauramos depois
-        let externas = std::mem::take(&mut self.variaveis);
-        let externas_invalidas = std::mem::take(&mut self.variaveis_invalidas);
+        // Os parâmetros entram por cima das variáveis de fora; depois restauramos o escopo global
+        let externas = self.variaveis.clone();
+        let mut vistos: HashSet<&str> = HashSet::new();
         for p in &f.params {
-            if self.variaveis.contains_key(&p.name) {
+            if !vistos.insert(p.name.as_str()) {
                 self.erro(p.span, format!("parâmetro `{}` repetido em `{}`", p.name, nome));
-            } else {
-                self.variaveis.insert(p.name.clone(), Tipo::Number);
             }
+            self.variaveis.insert(p.name.clone(), Tipo::Number);
         }
         let tipo_corpo = self.tipo_expr(&f.corpo);
         self.variaveis = externas;
-        self.variaveis_invalidas = externas_invalidas;
 
         if let Some(t) = tipo_corpo {
             if t != Tipo::Number {
@@ -634,7 +633,7 @@ impl Checker {
                     None => erros.push(ErroSemantico::new(
                         nome.span,
                         format!(
-                            "função nativa `{}` desconhecida (disponíveis: short_dist, filter, {})",
+                            "consulta `{}` desconhecida (disponíveis: short_dist, filter, {})",
                             nome.name,
                             consults::NOMES.join(", ")
                         ),
@@ -1071,7 +1070,10 @@ mod tests {
         um_erro("func f(x) = x > 1;", "deve ser Number, encontrado Bool");
         um_erro("func f(x) = x;\nlet a = f(1, 2);", "espera 1 argumento(s), recebeu 2");
         um_erro("func f(x) = x;\nlet a = f(True);", "argumento 1 de `f` espera Number");
-        um_erro("let k = 1;\nfunc f(x) = k;", "variável `k` não declarada");
+        assert!(erros("let k = 1;\nfunc f(x) = x + k;").is_empty());
+        assert!(erros("let k = 1;\nfunc f(k) = k * 2;").is_empty()); // o parâmetro esconde o let
+        um_erro("func f(x) = x + k;\nlet k = 1;", "variável `k` não declarada"); // let só vale se vier antes
+        um_erro("let k = True;\nfunc f(x) = x + k;", "`+` espera Number"); // o tipo do let vale dentro da função
         um_erro("func f(x) = if x then 1 else 2;", "`if` espera Bool");
         um_erro("func f(x) = if x > 0 then 1 else True;", "mesmo tipo");
     }
@@ -1085,9 +1087,9 @@ mod tests {
     }
 
     #[test]
-    fn funcoes_nativas() {
+    fn consultas_short_path_e_connected() {
         assert!(erros(&format!("{}\nG.connected(ana, bia)\nG.short_path(ana, bia)", PESSOAS)).is_empty());
-        um_erro(&format!("{}\nG.voar(ana)", PESSOAS), "função nativa `voar` desconhecida");
+        um_erro(&format!("{}\nG.voar(ana)", PESSOAS), "consulta `voar` desconhecida");
         um_erro(&format!("{}\nG.connected(ana)", PESSOAS), "espera 2 argumento(s), recebeu 1");
         um_erro(&format!("{}\nG.connected(ana, zeca)", PESSOAS), "nó `zeca` não existe");
         // o tipo do resultado entra na tipagem: connected é Bool
