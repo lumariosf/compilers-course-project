@@ -1,6 +1,5 @@
 mod ast;
 mod checker;
-mod consults;
 mod interpreter;
 mod lexer;
 mod types;

@@ -26,6 +26,8 @@ extern {
         "else" => Token::Else,
 
         "short_dist" => Token::ShortDist,
+        "short_path" => Token::ShortPath,
+        "connected" => Token::Connected,
         "filter" => Token::Filter,
         "merge" => Token::Merge,
 
@@ -277,12 +279,23 @@ Chamada: Chamada = {
         }
     },
 
-    // G.short_path(a, b), G.connected(a, b), ...: quais nomes existem é decidido no checker
-    <nome:Ident> "(" <args:Comma<Ident>> ")"
+    // lista das arestas do menor caminho (mesmo Dijkstra do short_dist)
+    "short_path"
+    "(" <o:Ident> "," <d:Ident> ")"
     => {
-        Chamada::Nativa {
-            nome,
-            args,
+        Chamada::ShortPath {
+            origem: o,
+            destino: d,
+        }
+    },
+
+    // existe caminho de origem até destino? (Bool)
+    "connected"
+    "(" <o:Ident> "," <d:Ident> ")"
+    => {
+        Chamada::Connected {
+            origem: o,
+            destino: d,
         }
     },
 };
@@ -386,7 +399,7 @@ ExprPos: Expr = {
         span: Span { start: l, end: r },
     },
     // G.short_dist(a, b) e G.filter(...) como expressão (encadeáveis: G.filter(...).short_dist(a, b)).
-    // Sem conflito com o acesso `e.campo`: short_dist/filter são palavras-chave, não "ident".
+    // Sem conflito com o acesso `e.campo`: short_dist/short_path/connected/filter são palavras-chave, não "ident".
     <l:@L> <base:ExprPos> "." <c:Chamada> <r:@R> => Expr {
         kind: ExprKind::Consulta(Box::new(base), Box::new(c)),
         span: Span { start: l, end: r },

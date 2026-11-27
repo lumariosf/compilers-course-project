@@ -103,9 +103,10 @@ pub enum Chamada {
     ShortDist { origem: Ident, destino: Ident },
     Filter { filtro: Filtro },
     Merge { grafo_alvo: Ident },
-    // Consulta que roda um algoritmo sobre o grafo: G.short_path(a, b), G.connected(a, b)
-    // As funções existentes e suas assinaturas ficam em consults.rs.
-    Nativa { nome: Ident, args: Vec<Ident> },
+    // G.short_path(a, b): lista das arestas do menor caminho (o mesmo Dijkstra do short_dist)
+    ShortPath { origem: Ident, destino: Ident },
+    // G.connected(a, b): existe caminho de a até b? (Bool, nunca dá erro de execução)
+    Connected { origem: Ident, destino: Ident },
 }
 
 #[derive(Debug, Clone, PartialEq)]
