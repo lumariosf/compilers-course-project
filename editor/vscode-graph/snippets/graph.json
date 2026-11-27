@@ -1,0 +1,63 @@
+{
+  "Graph": {
+    "prefix": "graph",
+    "body": [
+      "Graph ${1:G} {",
+      "\tNode = { ${2:a, b, c} }",
+      "\tEdge = { ${3:a -> b : 1, b -> c : 2} }",
+      "}",
+      "$0"
+    ],
+    "description": "Declara um grafo com nós e arestas"
+  },
+  "NodeType": {
+    "prefix": "nodetype",
+    "body": ["NodeType ${1:Pessoa} { ${2:nome}: ${3|String,Number,Bool,Option<String>,Option<Number>,Option<Bool>|} }"],
+    "description": "Declara um tipo de nó com atributos"
+  },
+  "func": {
+    "prefix": "func",
+    "body": ["func ${1:nome}(${2:x}) = ${3:x};"],
+    "description": "Declara uma função"
+  },
+  "let": {
+    "prefix": "let",
+    "body": ["let ${1:nome} = ${2:expr};"],
+    "description": "Declara uma variável imutável"
+  },
+  "print": {
+    "prefix": "print",
+    "body": ["print(${1:expr});"],
+    "description": "Imprime uma ou mais expressões"
+  },
+  "if": {
+    "prefix": "if",
+    "body": ["if ${1:cond} then ${2:a} else ${3:b}"],
+    "description": "Expressão condicional"
+  },
+  "filter": {
+    "prefix": "filter",
+    "body": ["${1:G}.filter(for ${2:e} in ${1:G} | ${3:${2:e}.weight >= 5})"],
+    "description": "Filtra as arestas de um grafo"
+  },
+  "short_dist": {
+    "prefix": "short_dist",
+    "body": ["${1:G}.short_dist(${2:a}, ${3:b})"],
+    "description": "Menor distância entre dois nós"
+  },
+  "short_path": {
+    "prefix": "short_path",
+    "body": ["${1:G}.short_path(${2:a}, ${3:b})"],
+    "description": "Arestas do menor caminho entre dois nós"
+  },
+  "connected": {
+    "prefix": "connected",
+    "body": ["${1:G}.connected(${2:a}, ${3:b})"],
+    "description": "Existe caminho entre dois nós?"
+  },
+  "merge": {
+    "prefix": "merge",
+    "body": ["Graph ${1:G3} = ${2:G1}.merge(${3:G2}, ${2:G1}.${4:a} -> ${3:G2}.${5:b} : ${6:1})"],
+    "description": "Cria um grafo novo unindo dois grafos com pontes"
+  }
+}

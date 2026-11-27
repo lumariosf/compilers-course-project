@@ -1,0 +1,60 @@
+{
+  "name": "graph-language",
+  "displayName": "GRAPH Language",
+  "description": "Ícone e destaque de sintaxe para arquivos .graph (DSL de grafos do grupo 5 de Compiladores 2026.2)",
+  "version": "1.0.0",
+  "publisher": "grupo5-compiladores",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "graph",
+        "aliases": [
+          "GRAPH",
+          "graph"
+        ],
+        "extensions": [
+          ".graph"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/graph.svg",
+          "dark": "./icons/graph.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "graph",
+        "scopeName": "source.graph",
+        "path": "./syntaxes/graph.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": "keyword.operator.edge.graph",
+            "settings": {
+              "foreground": "#14A090",
+              "fontStyle": "bold"
+            }
+          }
+        ]
+      }
+    },
+    "snippets": [
+      {
+        "language": "graph",
+        "path": "./snippets/graph.json"
+      }
+    ]
+  }
+}
