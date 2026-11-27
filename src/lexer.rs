@@ -44,6 +44,10 @@ pub enum Token {
     // consultas
     #[token("short_dist")]
     ShortDist, 
+    #[token("short_path")]
+    ShortPath,
+    #[token("connected")]
+    Connected,
     #[token("filter")]
     Filter, 
     #[token("merge")]

@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::fmt;
 
 use crate::ast::*;
@@ -252,14 +252,11 @@ pub fn avisos(programa: &[Item]) -> Vec<Aviso> {
                 for c in consultas_do_item(outro) {
                     for chamada in &c.chamadas {
                         match chamada {
-                            Chamada::ShortDist { origem, destino } => {
+                            Chamada::ShortDist { origem, destino }
+                            | Chamada::ShortPath { origem, destino }
+                            | Chamada::Connected { origem, destino } => {
                                 nos_usados.insert(origem.name.clone());
                                 nos_usados.insert(destino.name.clone());
-                            }
-                            Chamada::Nativa { args, .. } => {
-                                for no in args {
-                                    nos_usados.insert(no.name.clone());
-                                }
                             }
                             _ => {}
                         }
@@ -705,14 +702,32 @@ impl Interpretador {
                         distancia: d,
                     });
                 }
-                Chamada::Nativa { nome, args } => {
-                    ultimo_resultado = Some(crate::consults::executar_nativa(
+                Chamada::ShortPath { origem, destino } => {
+                    let (_, arestas) = calcular_caminho_minimo(
                         &grafo_atual,
-                        &c.grafo.name,
-                        nome,
-                        args,
+                        &origem.name,
+                        &destino.name,
                         c.grafo.span,
-                    )?);
+                    )?;
+                    ultimo_resultado = Some(ResultadoConsulta::Caminho {
+                        grafo: c.grafo.name.clone(),
+                        arestas,
+                    });
+                }
+                Chamada::Connected { origem, destino } => {
+                    for no in [origem, destino] {
+                        if !grafo_atual.nos.contains_key(&no.name) {
+                            return Err(ErroExecucao::new(
+                                c.grafo.span,
+                                format!("nó `{}` não existe no grafo `{}`", no.name, grafo_atual.nome),
+                            ));
+                        }
+                    }
+                    ultimo_resultado = Some(ResultadoConsulta::Booleano(existe_caminho(
+                        &grafo_atual,
+                        &origem.name,
+                        &destino.name,
+                    )));
                 }
                 Chamada::Merge { grafo_alvo } => {
                     return Err(ErroExecucao::new(
@@ -1168,6 +1183,41 @@ fn reconstruir_caminho<'a>(
     caminho
 }
 
+// ========== BFS para connected: existe caminho de `origem` até `destino`?
+// Respeita a direção das arestas `->`; uma aresta `--` anda nos dois sentidos.
+
+fn existe_caminho(grafo: &GrafoRuntime, origem: &str, destino: &str) -> bool {
+    if origem == destino {
+        return true;
+    }
+    let mut adj: HashMap<&str, Vec<&str>> = HashMap::new();
+    for a in &grafo.arestas {
+        adj.entry(a.origem.as_str()).or_default().push(a.destino.as_str());
+        if a.tipo == TipoAresta::NaoDirecionada {
+            adj.entry(a.destino.as_str()).or_default().push(a.origem.as_str());
+        }
+    }
+
+    let mut visitados: HashSet<&str> = HashSet::new();
+    let mut fila: VecDeque<&str> = VecDeque::new();
+    visitados.insert(origem);
+    fila.push_back(origem);
+
+    while let Some(no) = fila.pop_front() {
+        if let Some(vizinhos) = adj.get(no) {
+            for &v in vizinhos {
+                if v == destino {
+                    return true;
+                }
+                if visitados.insert(v) {
+                    fila.push_back(v);
+                }
+            }
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1441,5 +1491,59 @@ mod tests {
             .unwrap();
         let erro = filho.join().unwrap().unwrap_err();
         assert!(erro.contains("limite de recursão"), "{}", erro);
+    }
+    const REDE: &str = r#"
+        Graph G {
+            Node = {a, b, c, d, e}
+            Edge = { a -> b : 2, b -> c : 3, a -> c : 10, c -- d : 1 }
+        }
+    "#;
+
+    fn com_rede(consulta: &str) -> String {
+        format!("{}\n{}", REDE, consulta)
+    }
+
+    fn caminho(consulta: &str) -> Vec<String> {
+        let (_, res) = interpretar(&com_rede(consulta)).expect("deveria executar");
+        match &res[0] {
+            ResultadoConsulta::Caminho { arestas, .. } => arestas.iter().map(|a| a.to_string()).collect(),
+            outro => panic!("esperava Caminho, veio {:?}", outro),
+        }
+    }
+
+    #[test]
+    fn short_path_lista_as_arestas_do_menor_caminho() {
+        // a -> b -> c (5) é mais barato que a -> c direto (10)
+        assert_eq!(caminho("G.short_path(a, d)"), vec!["a -> b : 2", "b -> c : 3", "c -- d : 1"]);
+    }
+
+    #[test]
+    fn short_path_orienta_aresta_nao_direcionada_no_sentido_percorrido() {
+        assert_eq!(caminho("G.short_path(d, c)"), vec!["d -- c : 1"]);
+    }
+
+    #[test]
+    fn short_path_do_no_para_ele_mesmo_e_vazio() {
+        assert!(caminho("G.short_path(a, a)").is_empty());
+    }
+
+    #[test]
+    fn short_path_desconectado_e_erro() {
+        let erro = interpretar(&com_rede("G.short_path(a, e)")).unwrap_err();
+        assert!(erro.contains("não estão conectados"), "{}", erro);
+    }
+
+    #[test]
+    fn connected_nunca_da_erro() {
+        for (consulta, esperado) in [
+            ("G.connected(a, d)", true),
+            ("G.connected(d, a)", false), // as arestas `->` só andam num sentido
+            ("G.connected(d, c)", true),  // `--` anda nos dois
+            ("G.connected(a, e)", false),
+            ("G.connected(e, e)", true),
+        ] {
+            let (_, res) = interpretar(&com_rede(consulta)).expect("deveria executar");
+            assert_eq!(res, vec![ResultadoConsulta::Booleano(esperado)], "{}", consulta);
+        }
     }
 }

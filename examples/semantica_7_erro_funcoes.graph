@@ -13,6 +13,6 @@ func j(x) = k(x);               // (erro) função `k` não declarada
 let r1 = f(1, 2);             // (erro) f espera 1 argumento
 let r2 = f(True);             // (erro) argumento 1 espera Number
 print(if 1 then 2 else 3);    // (erro) `if` espera Bool
-print(G.voar(a));             // (erro) consulta `voar` desconhecida
-print(G.connected(a));        // (erro) connected espera 2 argumentos
+let r3 = G.connected(a, b) + 1;  // (erro) `+` espera Number, encontrado Bool
+print(G.short_path(a, yyy));      // (erro) nó `yyy` não existe
 print(G.connected(a, zzz));   // (erro) nó `zzz` não existe

@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::ast::*;
-use crate::consults;
 use crate::types::{resolver_tipo, ErroSemantico, Tipo};
 
 // O que o checker sabe sobre um grafo já declarado
@@ -557,7 +556,8 @@ impl Checker {
         }
     }
 
-    // G.short_dist(a, b) -> Number;  G.filter(...) -> Grafo.
+    // G.short_dist(a, b) -> Number;  G.filter(...) e G.short_path(a, b) -> Grafo (lista de arestas);
+    // G.connected(a, b) -> Bool.
     // Reaproveita o checar_consulta (nós existem, filter percorre o próprio grafo, condição é Bool).
     fn tipo_consulta(&mut self, e: &Expr) -> Option<Tipo> {
         let Some(c) = e.como_consulta() else {
@@ -572,7 +572,8 @@ impl Checker {
         match c.chamadas.last() {
             Some(Chamada::ShortDist { .. }) => Some(Tipo::Number),
             Some(Chamada::Filter { .. }) => Some(Tipo::Grafo),
-            Some(Chamada::Nativa { nome, .. }) => consults::assinatura(&nome.name).map(|(_, t)| t),
+            Some(Chamada::ShortPath { .. }) => Some(Tipo::Grafo), // lista de arestas, como o filter
+            Some(Chamada::Connected { .. }) => Some(Tipo::Bool),
             _ => None,
         }
     }
@@ -593,7 +594,9 @@ impl Checker {
         // filter só remove arestas: toda chamada encadeada vê os mesmos nós do grafo original
         for chamada in &c.chamadas {
             match chamada {
-                Chamada::ShortDist { origem, destino } => {
+                Chamada::ShortDist { origem, destino }
+                | Chamada::ShortPath { origem, destino }
+                | Chamada::Connected { origem, destino } => {
                     for no in [origem, destino] {
                         if !info.nos.contains_key(&no.name) {
                             erros.push(ErroSemantico::new(
@@ -629,32 +632,6 @@ impl Checker {
                         }
                     }
                 }
-                Chamada::Nativa { nome, args } => match consults::assinatura(&nome.name) {
-                    None => erros.push(ErroSemantico::new(
-                        nome.span,
-                        format!(
-                            "consulta `{}` desconhecida (disponíveis: short_dist, filter, {})",
-                            nome.name,
-                            consults::NOMES.join(", ")
-                        ),
-                    )),
-                    Some((aridade, _)) => {
-                        if args.len() != aridade {
-                            erros.push(ErroSemantico::new(
-                                nome.span,
-                                format!("`{}` espera {} argumento(s), recebeu {}", nome.name, aridade, args.len()),
-                            ));
-                        }
-                        for no in args {
-                            if !info.nos.contains_key(&no.name) {
-                                erros.push(ErroSemantico::new(
-                                    no.span,
-                                    format!("nó `{}` não existe em `{}`", no.name, c.grafo.name),
-                                ));
-                            }
-                        }
-                    }
-                },
                 // Resto da sintaxe antiga `G2.merge(G1)`: nenhuma regra da gramática gera esta chamada
                 Chamada::Merge { grafo_alvo } => erros.push(ErroSemantico::new(
                     grafo_alvo.span,
@@ -1089,9 +1066,8 @@ mod tests {
     #[test]
     fn consultas_short_path_e_connected() {
         assert!(erros(&format!("{}\nG.connected(ana, bia)\nG.short_path(ana, bia)", PESSOAS)).is_empty());
-        um_erro(&format!("{}\nG.voar(ana)", PESSOAS), "consulta `voar` desconhecida");
-        um_erro(&format!("{}\nG.connected(ana)", PESSOAS), "espera 2 argumento(s), recebeu 1");
         um_erro(&format!("{}\nG.connected(ana, zeca)", PESSOAS), "nó `zeca` não existe");
+        um_erro(&format!("{}\nG.short_path(zeca, bia)", PESSOAS), "nó `zeca` não existe");
         // o tipo do resultado entra na tipagem: connected é Bool
         assert!(erros(&format!("{}\nlet ok = G.connected(ana, bia);\nprint(if ok then G.short_dist(ana, bia) else 0);", PESSOAS)).is_empty());
         um_erro(&format!("{}\nlet n = G.short_dist(ana, bia) and True;", PESSOAS), "`and` espera Bool, encontrado Number");

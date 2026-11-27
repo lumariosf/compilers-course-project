@@ -367,7 +367,7 @@ Regras:
 
 ### 12. Consultas `short_path` e `connected`
 
-Além de `short_dist` e `filter`, há mais duas consultas, que também rodam um algoritmo sobre o grafo e se encadeiam com `G.` como as outras. Os argumentos são nomes de nós, como em `short_dist`, e nós inexistentes são rejeitados em tempo de compilação.
+Além de `short_dist` e `filter`, há mais duas consultas, que também rodam um algoritmo sobre o grafo e se encadeiam com `G.` como as outras. Os argumentos são sempre dois nomes de nós, como em `short_dist`: `short_path` e `connected` são palavras reservadas, e passar outra quantidade de argumentos é erro de sintaxe. Nós inexistentes são rejeitados em tempo de compilação.
 
 | Consulta | Algoritmo | Resultado |
 |----------|-----------|-----------|
@@ -386,7 +386,7 @@ Rede.short_path(a, e)     // a -> b : 2
 
 `connected` combina bem com `if`: `if G.connected(a, b) then G.short_dist(a, b) else -1`.
 
-Essas consultas ficam em `src/consults.rs`: a tabela `assinatura()` (quantos nós recebem e o tipo do resultado) é lida pelo checker, e `executar_nativa()` roda o algoritmo no interpretador. Para criar uma consulta nova basta acrescentar a assinatura em `assinatura()`, o nome em `NOMES` e um braço em `executar_nativa()`: gramática e checker não mudam.
+Para criar uma consulta nova no mesmo molde: um token em `lexer.rs`, uma regra em `Chamada` na `grammar.lalrpop`, uma variante em `Chamada` no `ast.rs`, os braços correspondentes no `checker.rs` (nós existem e tipo do resultado) e no `interpreter.rs` (o algoritmo).
 
 #### Exemplos da 3ª entrega
 
