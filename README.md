@@ -348,11 +348,11 @@ func dobro(x) = x * 2;
 func soma(a, b) = a + b;
 func fat(n) = if n <= 1 then 1 else n * fat(n - 1);
 
-print(soma(dobro(3), fat(5)));     # 126
+print(soma(dobro(3), fat(5)));     // 126
 
 let taxa = 3;
-func com_taxa(x) = x * taxa;       # lê o `let taxa` declarado antes
-print(com_taxa(5));                # 15
+func com_taxa(x) = x * taxa;       // lê o `let taxa` declarado antes
+print(com_taxa(5));                // 15
 ```
 
 Regras:
@@ -377,11 +377,11 @@ Além de `short_dist` e `filter`, há mais duas consultas, que também rodam um 
 `short_path` mostra o caminho que `short_dist` mede. Uma aresta `--` percorrida no sentido contrário aparece orientada no sentido do caminho:
 
 ```bash
-Rede.short_dist(a, e)     # 10
-Rede.short_path(a, e)     # a -> b : 2
-                          # b -> c : 3
-                          # c -- d : 1
-                          # d -> e : 4
+Rede.short_dist(a, e)     // 10
+Rede.short_path(a, e)     // a -> b : 2
+                          // b -> c : 3
+                          // c -- d : 1
+                          // d -> e : 4
 ```
 
 `connected` combina bem com `if`: `if G.connected(a, b) then G.short_dist(a, b) else -1`.
@@ -397,6 +397,16 @@ Essas consultas ficam em `src/consults.rs`: a tabela `assinatura()` (quantos nó
 | `interpretador_5_short_path.graph` | lista de arestas do menor caminho |
 | `interpretador_6_connected.graph` | `connected` e seu uso com `if` |
 | `semantica_7_erro_funcoes.graph` | 11 erros de funções, `if` e consultas |
+
+## Suporte no VS Code
+
+A pasta [`editor/vscode-graph/`](editor/vscode-graph/) contém uma extensão que dá ícone próprio aos arquivos `.graph`, destaque de sintaxe e snippets. Para instalar:
+
+```bash
+./editor/vscode-graph/install.sh
+```
+
+e recarregue o VS Code (`Ctrl+Shift+P` → **Developer: Reload Window**). Mais detalhes no [README da extensão](editor/vscode-graph/README.md).
 
 ## Como rodar os testes
 
